@@ -4,5 +4,5 @@ charon
 
 The Ferryman. He who guides requests in the container underworld.
 --------------------------------------------------------------
-Charon is DNS. He uses information from derived from the graph database to dynamically resolve ip addresses for containers within our system.
+Charon is DNS. He uses information from derived from the graph database to dynamically resolve ip addresses for container domain names within our system.
 
