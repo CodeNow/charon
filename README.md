@@ -49,6 +49,9 @@ You can then use the command `dig` to hit your sever and watch it resolve:
 dig example.com @localhost -p 8053
 ```
 
+Note, in development charon runs, by default, on port `8053`.
+
+
 ### Testing & Linting
 Before pushing changes to master make sure the source lints and tests appropriately:
 ```
