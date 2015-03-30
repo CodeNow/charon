@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "lint": "jshint index.js lib/",
-    "test": "NODE_ENV=test lab -v -c ./test/*"
+    "test": "jshint index.js lib/ && NODE_ENV=test lab -v -c ./test/*"
   },
   "repository": {
     "type": "git",

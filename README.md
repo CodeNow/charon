@@ -15,11 +15,7 @@ dig example.com @localhost -p 8053
 ```
 
 ### Testing & Linting
-Before pushing changes to master make sure the source lints:
-```
-npm run lint
-```
-And passes all tests:
+Before pushing changes to master make sure the source lints and tests appropriately:
 ```
 npm run test
 ```
