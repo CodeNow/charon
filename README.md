@@ -41,7 +41,7 @@ It is important to note that charon will **never** attempt to resolve domain nam
 charon:query:warning No internal container domain names given, skipping.
 ```
 
-Finally, Charon only supports the resolution of `A` records, since other types of records do not make sense in the context of container-to-container ip resolution. This means charon *ignores question types* when resolving names. If in the future we may require support for other types of records (e.g. `CNAME`).
+Finally, Charon only supports the resolution of `A` records, since other types of records do not make sense in the context of container-to-container ip resolution. This means charon *ignores question types* when resolving names. Note: In the future we may require support for other types of records (e.g. `CNAME`), so this may be subject to change.
 
 
 ### Testing & Linting
