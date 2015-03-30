@@ -6,7 +6,9 @@ Charon is DNS. He uses information from derived from the graph database to dynam
 
 ### Overview
 
-Charon is a [UDP](http://en.wikipedia.org/wiki/User_Datagram_Protocol) server that is responsible for resolving domain names between containers. It resolve names by the requesting container's ip address via the API. Charon is also a specialized DNS, meaning it will ignore queries for non-internal domain names. For example when given a query for `stage-api-codenow.runnableapp.com` (a valid query), the response will look something like this:
+Charon is a [UDP](http://en.wikipedia.org/wiki/User_Datagram_Protocol) based DNS server that is responsible for resolving domain names between containers. Name resolution is contextualized by way of the requesting container's IP address, and actual lookups are performed by querying the graph database through the API.
+
+Charon is also a specialized DNS, meaning it will ignore queries for non-container domain names (e.g. domains that do not match `*.runnableapp.com`). For example when given a valid query, such as `stage-api-codenow.runnableapp.com`, the response will look something like this:
 
 ```
 ;; QUESTION SECTION:
@@ -21,7 +23,7 @@ stage-api-codenow.runnableapp.com. 0 IN	A	127.0.0.1
 ;; MSG SIZE  rcvd: 67
 ```
 
-But when given an invalid request, such as `www.google.com`, the response will not contain an answer section:
+But when given an invalid query, such as `www.google.com`, the response will not contain an answer section:
 
 ```
 ;; QUESTION SECTION:
@@ -33,13 +35,14 @@ But when given an invalid request, such as `www.google.com`, the response will n
 ;; MSG SIZE  rcvd: 28
 ```
 
-Charon will **never** attempt to resolve domain names that do not map to internal containers. It literally filters all domains that do not match the appropriate pattern before performing a query. If no names were able to be mapped, a warning will be output in the server logs, like so:
-
-Finally, Charon only supports the resolution of `A` records. Other types of records do not make sense in the context of container ip resolution. This means charon will ignore question types when resolving names. If in the future we require support for other types of records (e.g. `CNAME`) this will change.
+It is important to note that charon will **never** attempt to resolve domain names that do not map to internal containers. It literally filters all domains that do not match the appropriate pattern before attempting to resolve names. If the server is not provided with a single name to be resolved, the server will bypass any resolution attempts, and output a warning in the logs:
 
 ```
 charon:query:warning No internal container domain names given, skipping.
 ```
+
+Finally, Charon only supports the resolution of `A` records, since other types of records do not make sense in the context of container-to-container ip resolution. This means charon will ignore question types when resolving names. If in the future we may require support for other types of records (e.g. `CNAME`).
+
 
 ### Testing & Linting
 Before pushing changes to master make sure the source lints and tests appropriately:
