@@ -23,7 +23,7 @@ stage-api-codenow.runnableapp.com. 0 IN	A	127.0.0.1
 ;; MSG SIZE  rcvd: 67
 ```
 
-But when given an invalid query, such as `www.google.com`, the response will not contain an answer section:
+But when given an invalid query, such as `www.google.com`, the response will not contain an answer section (i.e. will be empty):
 
 ```
 ;; QUESTION SECTION:
