@@ -35,13 +35,13 @@ But when given an invalid query, such as `www.google.com`, the response will not
 ;; MSG SIZE  rcvd: 28
 ```
 
-It is important to note that charon will **never** attempt to resolve domain names that do not map to internal containers. It literally filters all domains that do not match the appropriate pattern before attempting to resolve names. If the server is not provided with a single name to be resolved, the server will bypass any resolution attempts, and output a warning in the logs:
+It is important to note that charon will **never** attempt to resolve domain names that do not map to internal containers. It literally filters all domains that do not match the appropriate pattern before attempting to resolve names. If the server is not provided with at least one internal container name to resolved, it will bypass any resolution attempts and output a warning:
 
 ```
 charon:query:warning No internal container domain names given, skipping.
 ```
 
-Finally, Charon only supports the resolution of `A` records, since other types of records do not make sense in the context of container-to-container ip resolution. This means charon will ignore question types when resolving names. If in the future we may require support for other types of records (e.g. `CNAME`).
+Finally, Charon only supports the resolution of `A` records, since other types of records do not make sense in the context of container-to-container ip resolution. This means charon *ignores question types* when resolving names. If in the future we may require support for other types of records (e.g. `CNAME`).
 
 
 ### Testing & Linting
