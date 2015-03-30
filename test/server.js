@@ -38,14 +38,15 @@ describe('server', function() {
     req.send();
   }
 
-  it('should resolve internal domain names', function (done) {
+  it('should handle internal domain names requests', function (done) {
     request('example.runnableapp.com', function (err, resp) {
       expect(resp.answer).to.not.be.empty();
+      // TODO Need more detailed tests here
       done();
     });
   });
 
-  it('should ignore external domain names', function (done) {
+  it('should handle external domain names requests', function (done) {
     request('www.google.com', function (err, resp) {
       expect(resp.answer).to.be.empty();
       done();
