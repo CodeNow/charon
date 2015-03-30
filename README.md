@@ -39,6 +39,19 @@ Charon will **never** attempt to resolve domain names that do not map to interna
 charon:query:warning No internal container domain names given, skipping.
 ```
 
+### Testing & Linting
+Before pushing changes to master make sure the source lints and tests appropriately:
+```
+npm run test
+```
+
+### Building Documetation
+There is an npm task that allows you to build friendly and readable api documentation, here's how to use it:
+```
+npm run docs
+```
+Once they have built, simply open the `docs/index.html` page in a browser.
+
 ### Running Locally
 To run charon locally simply use:
 ```
@@ -50,11 +63,3 @@ dig example.com @localhost -p 8053
 ```
 
 Note, in development charon runs, by default, on port `8053`.
-
-
-### Testing & Linting
-Before pushing changes to master make sure the source lints and tests appropriately:
-```
-npm run test
-```
-
