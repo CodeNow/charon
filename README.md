@@ -35,6 +35,8 @@ But when given an invalid request, such as `www.google.com`, the response will n
 
 Charon will **never** attempt to resolve domain names that do not map to internal containers. It literally filters all domains that do not match the appropriate pattern before performing a query. If no names were able to be mapped, a warning will be output in the server logs, like so:
 
+Finally, Charon only supports the resolution of `A` records. Other types of records do not make sense in the context of container ip resolution. This means charon will ignore question types when resolving names. If in the future we require support for other types of records (e.g. `CNAME`) this will change.
+
 ```
 charon:query:warning No internal container domain names given, skipping.
 ```
