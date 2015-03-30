@@ -6,7 +6,7 @@ Charon is DNS. He uses information from derived from the graph database to dynam
 
 ### Overview
 
-Charon is a [http://en.wikipedia.org/wiki/User_Datagram_Protocol](UDP) server that is responsible for resolving domain names between containers. It resolve names by the requesting container's ip address via the API. Charon is also a specialized DNS, meaning it will ignore queries for non-internal domain names. For example when given a query for `stage-api-codenow.runnableapp.com` (a valid query), the response will look something like this:
+Charon is a [UDP](http://en.wikipedia.org/wiki/User_Datagram_Protocol) server that is responsible for resolving domain names between containers. It resolve names by the requesting container's ip address via the API. Charon is also a specialized DNS, meaning it will ignore queries for non-internal domain names. For example when given a query for `stage-api-codenow.runnableapp.com` (a valid query), the response will look something like this:
 
 ```
 ;; QUESTION SECTION:
