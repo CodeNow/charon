@@ -16,22 +16,25 @@ require('../lib/loadenv.js')();
 var dnsUtil = require('../lib/dns-util');
 
 describe('dns utilities', function() {
-  it('provides a basic, and correct, RCODE by name map', function (done) {
-    var expected = {
-      'NoError': 0,
-      'FormatError': 1,
-      'ServerFailure': 2,
-      'NXDomain': 3,
-      'NotImplemented': 4,
-      'Refused': 5
-    };
-    for (var name in expected) {
-      expect(dnsUtil.rcode[name]).to.equal(expected[name]);
-    }
-    done();
+
+  describe('.rcode', function() {
+    it('provides a basic, and correct, RCODE by name map', function (done) {
+      var expected = {
+        'NoError': 0,
+        'FormatError': 1,
+        'ServerFailure': 2,
+        'NXDomain': 3,
+        'NotImplemented': 4,
+        'Refused': 5
+      };
+      for (var name in expected) {
+        expect(dnsUtil.rcode[name]).to.equal(expected[name]);
+      }
+      done();
+    });
   });
 
-  describe('`.setRcode`', function() {
+  describe('.setRcode()', function() {
     it('sets the correct RCODE on a given response object', function (done) {
       var mockRes = {
         header: {
