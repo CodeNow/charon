@@ -15,6 +15,14 @@ require('../lib/loadenv.js')();
 var query = require('../lib/query');
 
 describe('query', function() {
+  describe('interface', function() {
+    it('should expose the resolve method', function (done) {
+      expect(query.resolve).to.exist();
+      expect(typeof query.resolve).to.equal('function');
+      done();
+    });
+  });
+
   describe('.resolve()', function() {
     it('should resolve internal dns names', function (done) {
       var names = [

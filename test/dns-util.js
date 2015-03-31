@@ -17,8 +17,21 @@ var dnsUtil = require('../lib/dns-util');
 
 describe('dns utilities', function() {
 
+  describe('interface', function() {
+    it('exposes a by name to value map for RCODEs', function (done) {
+      expect(dnsUtil.rcode).to.exist();
+      done();
+    });
+
+    it('exposes the `setRcode` function', function (done) {
+      expect(dnsUtil.setRcode).to.exist();
+      expect(typeof dnsUtil.setRcode).to.equal('function');
+      done();
+    });
+  });
+
   describe('.rcode', function() {
-    it('provides a basic, and correct, RCODE by name map', function (done) {
+    it('correct maps names to RCODEs', function (done) {
       var expected = {
         'NoError': 0,
         'FormatError': 1,
@@ -54,7 +67,7 @@ describe('dns utilities', function() {
           rcode: -1
         }
       };
-      dnsUtil.setRcode(mockRes, 'ThisIsNotAThing');
+      dnsUtil.setRcode(mockRes, 'NotAThing');
       expect(mockRes.header.rcode).to.equal(dnsUtil.rcode.NoError);
       done();
     });

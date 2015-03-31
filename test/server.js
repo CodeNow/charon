@@ -37,19 +37,33 @@ function request(domain, cb) {
 }
 
 describe('server', function() {
-  var serverInstance;
+  describe('interface', function() {
+    it('should expose a `start` method', function (done) {
+      expect(server.start).to.exist();
+      expect(typeof server.start).to.equal('function');
+      done();
+    });
 
-  before(function (done) {
-    serverInstance = server.start();
-    done();
+    it('should expose a `stop` method', function (done) {
+      expect(server.stop).to.exist();
+      expect(typeof server.stop).to.equal('function');
+      done();
+    });
   });
 
-  after(function (done) {
-    server.stop();
-    done();
-  });
+  describe('DNS Requests', function() {
+    var serverInstance;
 
-  describe('DNS', function() {
+    before(function (done) {
+      serverInstance = server.start();
+      done();
+    });
+
+    after(function (done) {
+      server.stop();
+      done();
+    });
+
     it('should resolve internal domain name requests', function (done) {
       request('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
@@ -80,27 +94,27 @@ describe('server', function() {
         done();
       });
     });
+
+    describe('error handling', function() {
+      it('should report server errors', function (done) {
+        sinon.stub(query, 'resolve', function () {
+          serverInstance.emit('error', new Error('ERROR'));
+        });
+        request('example.runnableapp.com', function (err, resp) {
+          query.resolve.restore();
+          done();
+        });
+      });
+
+      it ('should report socket errors', function(done) {
+        sinon.stub(query, 'resolve', function () {
+          serverInstance.emit('socketError', new Error('ERROR'));
+        });
+        request('example.runnableapp.com', function (err, resp) {
+          query.resolve.restore();
+          done();
+        });
+      });
+    }); // end 'errors'
   }); // end 'DNS'
-
-  describe('errors', function() {
-    it('should report server errors', function (done) {
-      sinon.stub(query, 'resolve', function () {
-        serverInstance.emit('error', new Error('ERROR'));
-      });
-      request('example.runnableapp.com', function (err, resp) {
-        query.resolve.restore();
-        done();
-      });
-    });
-
-    it ('should report socket errors', function(done) {
-      sinon.stub(query, 'resolve', function () {
-        serverInstance.emit('socketError', new Error('ERROR'));
-      });
-      request('example.runnableapp.com', function (err, resp) {
-        query.resolve.restore();
-        done();
-      });
-    });
-  }); // end 'errors'
 }); // end 'server'
