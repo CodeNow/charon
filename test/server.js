@@ -88,8 +88,8 @@ describe('server', function() {
         serverInstance.emit('error', new Error('ERROR'));
       });
       request('example.runnableapp.com', function (err, resp) {
-        done();
         query.resolve.restore();
+        done();
       });
     });
 
@@ -98,8 +98,8 @@ describe('server', function() {
         serverInstance.emit('socketError', new Error('ERROR'));
       });
       request('example.runnableapp.com', function (err, resp) {
-        done();
         query.resolve.restore();
+        done();
       });
     });
   }); // end 'errors'
