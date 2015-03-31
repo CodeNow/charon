@@ -18,12 +18,12 @@ var dnsUtil = require('../lib/dns-util');
 describe('dns utilities', function() {
 
   describe('interface', function() {
-    it('exposes a by name to value map for RCODEs', function (done) {
+    it('should expose a by name to value map for RCODEs', function (done) {
       expect(dnsUtil.rcode).to.exist();
       done();
     });
 
-    it('exposes the `setRcode` function', function (done) {
+    it('should expose the `setRcode` function', function (done) {
       expect(dnsUtil.setRcode).to.exist();
       expect(typeof dnsUtil.setRcode).to.equal('function');
       done();
