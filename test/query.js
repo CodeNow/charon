@@ -21,7 +21,7 @@ describe('query', function() {
       expect(typeof query.resolve).to.equal('function');
       done();
     });
-  });
+  }); // end 'interface'
 
   describe('.resolve()', function() {
     it('should resolve internal dns names', function (done) {
@@ -69,5 +69,5 @@ describe('query', function() {
     it('should appropriately resolves names given remote address', function (done) {
       done(new Error('Not tested.'));
     });
-  });
+  }); // end '.resolve()'
 });

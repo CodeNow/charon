@@ -49,7 +49,7 @@ describe('server', function() {
       expect(typeof server.stop).to.equal('function');
       done();
     });
-  });
+  }); // end 'interface'
 
   describe('DNS Requests', function() {
     var serverInstance;

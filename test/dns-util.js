@@ -16,7 +16,6 @@ require('../lib/loadenv.js')();
 var dnsUtil = require('../lib/dns-util');
 
 describe('dns utilities', function() {
-
   describe('interface', function() {
     it('should expose a by name to value map for RCODEs', function (done) {
       expect(dnsUtil.rcode).to.exist();
@@ -28,7 +27,7 @@ describe('dns utilities', function() {
       expect(typeof dnsUtil.setRcode).to.equal('function');
       done();
     });
-  });
+  }); // end 'interface'
 
   describe('.rcode', function() {
     it('correct maps names to RCODEs', function (done) {
@@ -45,7 +44,7 @@ describe('dns utilities', function() {
       }
       done();
     });
-  });
+  }); // end '.rcode'
 
   describe('.setRcode()', function() {
     it('sets the correct RCODE on a given response object', function (done) {
@@ -71,5 +70,5 @@ describe('dns utilities', function() {
       expect(mockRes.header.rcode).to.equal(dnsUtil.rcode.NoError);
       done();
     });
-  });
-});
+  }); // end '.setRcode()'
+}); // end 'dns utilities'
