@@ -39,7 +39,7 @@ describe('query', function() {
     ];
     query.resolve('127.0.0.1', names, function (err, records) {
       if (err) { return done(err); }
-      expect(records).to.be.empty();
+      expect(records).to.be.null;
       done();
     });
   });
@@ -57,7 +57,7 @@ describe('query', function() {
     });
   });
 
-  it('should appropriately resolves names given referrer ip', function (done) {
+  it('should appropriately resolves names given remote address', function (done) {
     done(new Error('Not tested.'));
   });
 });
