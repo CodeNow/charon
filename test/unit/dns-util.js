@@ -12,8 +12,8 @@ var expect = Code.expect;
 var dns = require('native-dns');
 var sinon = require('sinon');
 
-require('../lib/loadenv.js')();
-var dnsUtil = require('../lib/dns-util');
+require('../../lib/loadenv.js')();
+var dnsUtil = require('../../lib/dns-util');
 
 describe('dns utilities', function() {
   describe('interface', function() {

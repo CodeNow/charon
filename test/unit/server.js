@@ -15,11 +15,11 @@ var sinon = require('sinon');
 var debug = require('debug');
 var error = debug('charon:server:error');
 
-require('../lib/loadenv.js')();
-var server = require('../lib/server');
-var rcode = require('../lib/dns-util').rcode;
-var query = require('../lib/query');
-var apiClient = require('../lib/api-client');
+require('../../lib/loadenv.js')();
+var server = require('../../lib/server');
+var rcode = require('../../lib/dns-util').rcode;
+var query = require('../../lib/query');
+var apiClient = require('../../lib/api-client');
 
 describe('server', function() {
   describe('interface', function() {

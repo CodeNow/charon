@@ -14,8 +14,8 @@ var sinon = require('sinon');
 var debug = require('debug');
 var error = debug('charon:server:error');
 
-require('../lib/loadenv.js')();
-var client = require('../lib/api-client.js');
+require('../../lib/loadenv.js')();
+var client = require('../../lib/api-client.js');
 var user = client.user;
 
 describe('api-client', function() {

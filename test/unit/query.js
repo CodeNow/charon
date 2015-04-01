@@ -14,9 +14,9 @@ var dns = require('native-dns');
 var sinon = require('sinon');
 var createCount = require('callback-count');
 
-require('../lib/loadenv.js')();
-var query = require('../lib/query');
-var apiClient = require('../lib/api-client');
+require('../../lib/loadenv.js')();
+var query = require('../../lib/query');
+var apiClient = require('../../lib/api-client');
 
 describe('query', function() {
   describe('interface', function() {
