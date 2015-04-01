@@ -16,7 +16,10 @@ var error = debug('charon:error');
  * @param {Error} [err] Server start error, if applicable.
  */
 function afterStart(err) {
-  error('Could not start server: ' + err);
+  if (err) {
+    error('Could not start server: ' + err);
+    process.kill(1);
+  }
 }
 
 server.start(afterStart);
