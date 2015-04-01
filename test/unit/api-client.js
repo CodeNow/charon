@@ -79,15 +79,16 @@ describe('api-client', function() {
       });
 
       it('should correctly handle login errors', function (done) {
-        sinon.stub(user, 'githubLogin').yields(new Error('API Error'));
+        sinon.stub(user, 'githubLogin')
+          .onCall(0).yields(new Error('API Error'))
+          .onCall(1).yields();
         sinon.stub(user, 'logout').yields();
+
         client.login(function (err) {
           expect(err).to.exist();
-          user.githubLogin.restore();
-          sinon.stub(user, 'githubLogin').yields();
           client.login(function (err) {
             if (err) { return done(err); }
-            expect(user.githubLogin.calledOnce).to.be.true;
+            expect(user.githubLogin.calledTwice).to.be.true;
             done();
           });
         });
@@ -105,12 +106,8 @@ describe('api-client', function() {
       });
 
       it('should logout correctly', function (done) {
-        sinon.stub(user, 'githubLogin', function (token, cb) {
-          cb();
-        });
-        sinon.stub(user, 'logout', function (cb) {
-          cb();
-        });
+        sinon.stub(user, 'githubLogin').yields();
+        sinon.stub(user, 'logout').yields();
         client.login(function (err) {
           if (err) { return done(err); }
           client.logout(function (err) {
@@ -123,16 +120,16 @@ describe('api-client', function() {
 
       it('should correctly handle logout errors', function (done) {
         sinon.stub(user, 'githubLogin').yields();
-        sinon.stub(user, 'logout').yields(new Error('API Error'));
+        sinon.stub(user, 'logout')
+          .onCall(0).yields(new Error('API Error'))
+          .onCall(1).yields();
         client.login(function (err) {
           if (err) { return done(err); }
           client.logout(function (err) {
             expect(err).to.exist();
-            user.logout.restore();
-            sinon.stub(user, 'logout').yields();
             client.logout(function (err) {
               if (err) { return done(err); }
-              expect(user.logout.calledOnce).to.be.true;
+              expect(user.logout.calledTwice).to.be.true;
               done();
             });
           });
