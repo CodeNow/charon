@@ -56,27 +56,18 @@ describe('api-client', function() {
 
     describe('.login()', function() {
       it('should login correctly', function (done) {
-        sinon.stub(user, 'githubLogin', function (token, cb) {
-          expect(token).to.equal(process.env.API_TOKEN);
-          cb();
-        });
-        sinon.stub(user, 'logout', function (cb) {
-          cb();
-        });
+        sinon.stub(user, 'githubLogin').yields();
+        sinon.stub(user, 'logout').yields();
         client.login(function (err) {
           if (err) { return done(err); }
-          expect(user.githubLogin.calledOnce).to.be.true;
+          expect(user.githubLogin.calledWith(process.env.API_TOKEN).calledOnce).to.be.true;
           done();
         })
       });
 
       it('should ignore login if already logged in', function (done) {
-        sinon.stub(user, 'githubLogin', function (token, cb) {
-          cb();
-        });
-        sinon.stub(user, 'logout', function (cb) {
-          cb();
-        });
+        sinon.stub(user, 'githubLogin').yields();
+        sinon.stub(user, 'logout').yields();
         client.login(function (err) {
           if (err) { return done(err); }
           client.login(function (err) {
@@ -88,18 +79,12 @@ describe('api-client', function() {
       });
 
       it('should correctly handle login errors', function (done) {
-        sinon.stub(user, 'githubLogin', function (token, cb) {
-          cb(new Error('API Error'));
-        });
-        sinon.stub(user, 'logout', function (cb) {
-          cb();
-        });
+        sinon.stub(user, 'githubLogin').yields(new Error('API Error'));
+        sinon.stub(user, 'logout').yields();
         client.login(function (err) {
           expect(err).to.exist();
           user.githubLogin.restore();
-          sinon.stub(user, 'githubLogin', function (token, cb) {
-            cb();
-          });
+          sinon.stub(user, 'githubLogin').yields();
           client.login(function (err) {
             if (err) { return done(err); }
             expect(user.githubLogin.calledOnce).to.be.true;
@@ -111,9 +96,7 @@ describe('api-client', function() {
 
     describe('.logout()', function() {
       it('should ignore logout if not logged in', function (done) {
-        sinon.stub(user, 'logout', function() {
-          done(new Error('user.logout called even though client is not logged in.'));
-        });
+        sinon.stub(user, 'logout').yields();
         client.logout(function (err) {
           if (err) { return done(err); }
           expect(user.logout.callCount).to.equal(0);
@@ -139,20 +122,14 @@ describe('api-client', function() {
       });
 
       it('should correctly handle logout errors', function (done) {
-        sinon.stub(user, 'githubLogin', function (token, cb) {
-          cb();
-        });
-        sinon.stub(user, 'logout', function (cb) {
-          cb(new Error('API Error'));
-        });
+        sinon.stub(user, 'githubLogin').yields();
+        sinon.stub(user, 'logout').yields(new Error('API Error'));
         client.login(function (err) {
           if (err) { return done(err); }
           client.logout(function (err) {
             expect(err).to.exist();
             user.logout.restore();
-            sinon.stub(user, 'logout', function (cb) {
-              cb();
-            });
+            sinon.stub(user, 'logout').yields();
             client.logout(function (err) {
               if (err) { return done(err); }
               expect(user.logout.calledOnce).to.be.true;

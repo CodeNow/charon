@@ -31,9 +31,8 @@ describe('query', function() {
     describe('api integration', function() {
       beforeEach(function (done) {
         apiClient.user.fetchInternalIpForHostname = function() {};
-        sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
-          cb(null, {network: {hostIP: '10.0.0.1'}});
-        });
+        sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+          .yields(null, {network: {hostIP: '10.0.0.1'}});
         done();
       });
       afterEach(function (done) {

@@ -59,9 +59,7 @@ describe('server', function() {
     });
 
     it('should login to the api on start', function (done) {
-      sinon.stub(apiClient, 'login', function (cb) {
-        cb();
-      });
+      sinon.stub(apiClient, 'login').yields();
       server.start(function (err) {
         if (err) { return done(err); }
         expect(apiClient.login.calledOnce).to.be.true;
@@ -71,9 +69,7 @@ describe('server', function() {
     });
 
     it('should logout from the api on stop', function (done) {
-      sinon.stub(apiClient, 'logout', function(cb) {
-        cb();
-      });
+      sinon.stub(apiClient, 'logout').yields();
       server.stop(function (err) {
         if (err) { return done(err); }
         expect(apiClient.logout.calledOnce).to.be.true;
@@ -83,9 +79,7 @@ describe('server', function() {
     });
 
     it('should not start the server if unable to login to the api', function (done) {
-      sinon.stub(apiClient, 'login', function (cb) {
-        cb(new Error('Login Error'));
-      });
+      sinon.stub(apiClient, 'login').yields(new Error('Login Error'));
       server.start(function (err) {
         expect(err).to.exist();
         expect(server.instance.serve.callCount).to.equal(0);
@@ -95,9 +89,7 @@ describe('server', function() {
     });
 
     it('should not stop the server if unable to logout of the api', function (done) {
-      sinon.stub(apiClient, 'logout', function (cb) {
-        cb(new Error('Logout Error'));
-      });
+      sinon.stub(apiClient, 'logout').yields(new Error('Logout Error'));
       server.stop(function (err) {
         expect(err).to.exist();
         expect(server.instance.close.callCount).to.equal(0);

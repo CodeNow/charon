@@ -42,10 +42,9 @@ function dnsRequest(domain, cb) {
 describe('DNS Server (functional)', function() {
   before(function (done) {
     apiClient.user.fetchInternalIpForHostname = function() {};
-    sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
-      cb(null, { network: { hostIP: '127.0.0.1' } });
-    });
-    sinon.stub(apiClient, 'login', function(cb) { cb(); });
+    sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+      .yields(null, { network: { hostIP: '127.0.0.1' } });
+    sinon.stub(apiClient, 'login').yields();
     server.start(function() {
       apiClient.login.restore();
       done();
@@ -53,8 +52,8 @@ describe('DNS Server (functional)', function() {
   });
 
   after(function (done) {
-    sinon.stub(apiClient, 'logout', function(cb) { cb(); })
     apiClient.user.fetchInternalIpForHostname.restore();
+    sinon.stub(apiClient, 'logout').yields();
     server.stop(function() {
       apiClient.logout.restore();
       done();
@@ -80,9 +79,7 @@ describe('DNS Server (functional)', function() {
   });
 
   it('should handle server errors appropriately', function (done) {
-    sinon.stub(query, 'resolve', function (addr, domain, cb) {
-      cb(new Error('Server error'), null);
-    });
+    sinon.stub(query, 'resolve').yields(new Error('Server error'));
     dnsRequest('example.runnableapp.com', function (err, resp) {
       if (err) { return done(err); }
       expect(resp.answer).to.be.empty();
@@ -95,7 +92,7 @@ describe('DNS Server (functional)', function() {
   describe('error handling', function() {
     it('should report server errors', function (done) {
       sinon.stub(query, 'resolve', function () {
-        server.instance.emit('error', new Error('ERROR'));
+        server.instance.emit('error', new Error('Server Error'));
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         query.resolve.restore();
@@ -105,7 +102,7 @@ describe('DNS Server (functional)', function() {
 
     it ('should report socket errors', function(done) {
       sinon.stub(query, 'resolve', function () {
-        server.instance.emit('socketError', new Error('ERROR'));
+        server.instance.emit('socketError', new Error('Socket Error'));
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         query.resolve.restore();

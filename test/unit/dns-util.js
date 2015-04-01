@@ -9,8 +9,6 @@ var after = lab.after;
 var afterEach = lab.afterEach;
 var Code = require('code');
 var expect = Code.expect;
-var dns = require('native-dns');
-var sinon = require('sinon');
 
 require('../../lib/loadenv.js')();
 var dnsUtil = require('../../lib/dns-util');
