@@ -9,16 +9,26 @@ var after = lab.after;
 var afterEach = lab.afterEach;
 var Code = require('code');
 var expect = Code.expect;
-var dns = require('native-dns');
-var sinon = require('sinon');
 
-require('../lib/loadenv.js')();
-var dnsUtil = require('../lib/dns-util');
+require('../../lib/loadenv.js')();
+var dnsUtil = require('../../lib/dns-util');
 
 describe('dns utilities', function() {
+  describe('interface', function() {
+    it('should expose a by name to value map for RCODEs', function (done) {
+      expect(dnsUtil.rcode).to.exist();
+      done();
+    });
+
+    it('should expose the `setRcode` function', function (done) {
+      expect(dnsUtil.setRcode).to.exist();
+      expect(typeof dnsUtil.setRcode).to.equal('function');
+      done();
+    });
+  }); // end 'interface'
 
   describe('.rcode', function() {
-    it('provides a basic, and correct, RCODE by name map', function (done) {
+    it('correct maps names to RCODEs', function (done) {
       var expected = {
         'NoError': 0,
         'FormatError': 1,
@@ -32,7 +42,7 @@ describe('dns utilities', function() {
       }
       done();
     });
-  });
+  }); // end '.rcode'
 
   describe('.setRcode()', function() {
     it('sets the correct RCODE on a given response object', function (done) {
@@ -54,9 +64,9 @@ describe('dns utilities', function() {
           rcode: -1
         }
       };
-      dnsUtil.setRcode(mockRes, 'ThisIsNotAThing');
+      dnsUtil.setRcode(mockRes, 'NotAThing');
       expect(mockRes.header.rcode).to.equal(dnsUtil.rcode.NoError);
       done();
     });
-  });
-});
+  }); // end '.setRcode()'
+}); // end 'dns utilities'
