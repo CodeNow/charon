@@ -39,22 +39,13 @@ describe('api-client', function() {
   }); // end 'interface'
 
   describe('behaviors', function() {
-    afterEach(function (done) {
-      if (typeof user.githubLogin.restore === 'function') {
-        user.githubLogin.restore();
-      }
-      if (typeof user.logout.restore === 'function') {
-        client.logout(function() {
-          user.logout.restore();
-          done();
-        });
-      }
-      else {
-        done();
-      }
-    });
-
     describe('.login()', function() {
+      afterEach(function (done) {
+        client.logout(done);
+        user.githubLogin.restore();
+        user.logout.restore();
+      });
+
       it('should login correctly', function (done) {
         sinon.stub(user, 'githubLogin').yields();
         sinon.stub(user, 'logout').yields();
@@ -101,6 +92,7 @@ describe('api-client', function() {
         client.logout(function (err) {
           if (err) { return done(err); }
           expect(user.logout.callCount).to.equal(0);
+          user.logout.restore();
           done();
         });
       });
@@ -113,6 +105,8 @@ describe('api-client', function() {
           client.logout(function (err) {
             if (err) { return done(err); }
             expect(user.logout.calledOnce).to.be.true;
+            user.githubLogin.restore();
+            user.logout.restore();
             done();
           })
         });
@@ -130,6 +124,8 @@ describe('api-client', function() {
             client.logout(function (err) {
               if (err) { return done(err); }
               expect(user.logout.calledTwice).to.be.true;
+              user.githubLogin.restore();
+              user.logout.restore();
               done();
             });
           });
