@@ -32,7 +32,7 @@ describe('query', function() {
       beforeEach(function (done) {
         apiClient.user.fetchInternalIpForHostname = function() {};
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
-          .yields(null, {network: {hostIP: '10.0.0.1'}});
+          .yields(null, '10.0.0.1');
         done();
       });
       afterEach(function (done) {
@@ -64,9 +64,9 @@ describe('query', function() {
       before(function (done) {
         apiClient.user.fetchInternalIpForHostname = function() {};
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
-          var response = { network: { hostIP: '10.0.0.1' } };
+          var response = '10.0.0.1';
           if (address == '127.0.0.2') {
-            response.network.hostIP = '10.0.0.2';
+            response = '10.0.0.2';
           }
           cb(null, response);
         });
@@ -156,7 +156,7 @@ describe('query', function() {
         apiClient.user.fetchInternalIpForHostname = function() {};
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
           if (name == 'valid.runnableapp.com') {
-            return cb(null, { network: { hostIP: '10.0.0.1' } });
+            return cb(null, '10.0.0.1');
           }
           cb(new Error('API Error'));
         });
