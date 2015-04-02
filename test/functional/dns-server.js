@@ -41,7 +41,6 @@ function dnsRequest(domain, cb) {
 
 describe('DNS Server (functional)', function() {
   before(function (done) {
-    apiClient.user.fetchInternalIpForHostname = function() {};
     sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
       .yields(null, '127.0.0.1');
     sinon.stub(apiClient, 'login').yields();
