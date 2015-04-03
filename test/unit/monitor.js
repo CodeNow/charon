@@ -18,6 +18,12 @@ var dogstatsd = require('../fixtures/dogstatsd');
 
 describe('monitor', function() {
   describe('interface', function() {
+    it('should expose a `createMonitor` factory method', function (done) {
+      expect(monitor.createMonitor).to.exist();
+      expect(typeof monitor.createMonitor).to.equal('function');
+      done();
+    });
+
     it('should expose a `set` method', function (done) {
       expect(monitor.set).to.exist();
       expect(typeof monitor.set).to.equal('function');
@@ -76,48 +82,95 @@ describe('monitor', function() {
       done();
     })
 
-    it('should send sets through datadog', function (done) {
-      var key = 'example.set';
-      var value = 1337;
-      monitor.set(key, value);
-      expect(monitor.client.set.calledOnce).to.be.true();
-      expect(monitor.client.set.calledWith(key, value)).to.be.true();
-      done();
+    describe('constructor & factory', function () {
+      it('should use environment host and port by default', function (done) {
+        expect(monitor.host).to.equal(process.env.DATADOG_HOST);
+        expect(monitor.port).to.equal(process.env.DATADOG_PORT);
+        done();
+      });
+
+      it('should construct a new monitor', function (done) {
+        var custom = monitor.createMonitor();
+        expect(custom.host).to.exist();
+        expect(custom.port).to.exist();
+        expect(custom.client).to.exist();
+        done();
+      })
+
+      it('should use user defined host when specified', function (done) {
+        var customHost = '10.12.14.18';
+        var custom = monitor.createMonitor(customHost);
+        expect(custom.host).to.equal(customHost);
+        expect(monitor.port).to.equal(process.env.DATADOG_PORT);
+        done();
+      });
+
+      it('should use user defined port when specified', function (done) {
+        var customPort = '7777';
+        var custom = monitor.createMonitor(null, customPort);
+        expect(monitor.host).to.equal(process.env.DATADOG_HOST);
+        expect(custom.port).to.equal(customPort);
+        done();
+      });
+
+      it('should use user defined host and port when specified', function (done) {
+        var customHost = '10.12.14.18';
+        var customPort = '7777';
+        var custom = monitor.createMonitor(customHost, customPort);
+        expect(custom.host).to.equal(customHost);
+        expect(custom.port).to.equal(customPort);
+        done();
+      });
     });
 
-    it('should send counter increments through datadog', function (done) {
-      var key = 'example.counter';
-      monitor.increment(key);
-      expect(monitor.client.increment.calledOnce).to.be.true();
-      expect(monitor.client.increment.calledWith(key)).to.be.true();
-      done();
-    });
+    describe('helper aliases', function () {
+      it('should send sets through datadog', function (done) {
+        var key = 'example.set';
+        var value = 1337;
+        var sampleRate = '1s';
+        var tags = 'tag1 tag2';
+        var stub = monitor.client.set;
+        monitor.set(key, value, sampleRate, tags);
+        expect(stub.calledOnce).to.be.true();
+        expect(stub.calledWith(key, value, sampleRate, tags)).to.be.true();
+        done();
+      });
 
-    it('should send increments with a value through datadog', function (done) {
-      var key = 'example.counter';
-      var value = 42;
-      monitor.increment(key, value);
-      expect(monitor.client.increment.calledOnce).to.be.true();
-      expect(monitor.client.increment.calledWith(key, value)).to.be.true();
-      done();
-    });
+      it('should send counter increments through datadog', function (done) {
+        var key = 'example.counter';
+        var value = 42;
+        var sampleRate = '1d';
+        var tags = 'my tags';
+        var stub = monitor.client.increment;
+        monitor.increment(key, value, sampleRate, tags);
+        expect(stub.calledOnce).to.be.true();
+        expect(stub.calledWith(key, value, sampleRate, tags)).to.be.true();
+        done();
+      });
 
-    it('should send histograms through datadog', function (done) {
-      var key = 'example.histogram';
-      var value = 420;
-      monitor.histogram(key, value);
-      expect(monitor.client.histogram.calledOnce).to.be.true();
-      expect(monitor.client.histogram.calledWith(key, value)).to.be.true();
-      done();
-    });
+      it('should send histograms through datadog', function (done) {
+        var key = 'example.histogram';
+        var value = 420;
+        var sampleRate = '1w';
+        var tags = 'mah tagz';
+        var stub = monitor.client.histogram;
+        monitor.histogram(key, value, sampleRate, tags);
+        expect(stub.calledOnce).to.be.true();
+        expect(stub.calledWith(key, value, sampleRate, tags)).to.be.true();
+        done();
+      });
 
-    it('should send gauges through datadog', function (done) {
-      var key = 'speed.of.light';
-      var value = 299792458;
-      monitor.gauge(key, value);
-      expect(monitor.client.gauge.calledOnce).to.be.true();
-      expect(monitor.client.gauge.calledWith(key, value)).to.be.true();
-      done();
+      it('should send gauges through datadog', function (done) {
+        var key = 'speed.of.light';
+        var value = 299792458;
+        var sampleRate = '1yr';
+        var tags = 'einstein is cool';
+        var stub = monitor.client.gauge;
+        monitor.gauge(key, value, sampleRate, tags);
+        expect(stub.calledOnce).to.be.true();
+        expect(stub.calledWith(key, value, sampleRate, tags)).to.be.true();
+        done();
+      });
     });
 
     describe('timer', function() {
