@@ -255,6 +255,6 @@ describe('query', function() {
           done();
         });
       });
-    });
+    }); // end 'monitoring'
   }); // end '.resolve()'
 }); // end 'query'
