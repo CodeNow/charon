@@ -49,9 +49,11 @@ describe('api-client', function() {
       it('should login correctly', function (done) {
         sinon.stub(user, 'githubLogin').yields();
         sinon.stub(user, 'logout').yields();
+        var stub = user.githubLogin;
         client.login(function (err) {
           if (err) { return done(err); }
-          expect(user.githubLogin.calledWith(process.env.API_TOKEN).calledOnce).to.be.true;
+          expect(stub.calledOnce).to.be.true();
+          expect(stub.calledWith(process.env.API_TOKEN)).to.be.true();
           done();
         })
       });
@@ -63,7 +65,7 @@ describe('api-client', function() {
           if (err) { return done(err); }
           client.login(function (err) {
             if (err) { return done(err); }
-            expect(user.githubLogin.calledOnce).to.be.true;
+            expect(user.githubLogin.calledOnce).to.be.true();
             done();
           })
         });
@@ -79,7 +81,7 @@ describe('api-client', function() {
           expect(err).to.exist();
           client.login(function (err) {
             if (err) { return done(err); }
-            expect(user.githubLogin.calledTwice).to.be.true;
+            expect(user.githubLogin.calledTwice).to.be.true();
             done();
           });
         });
@@ -104,7 +106,7 @@ describe('api-client', function() {
           if (err) { return done(err); }
           client.logout(function (err) {
             if (err) { return done(err); }
-            expect(user.logout.calledOnce).to.be.true;
+            expect(user.logout.calledOnce).to.be.true();
             user.githubLogin.restore();
             user.logout.restore();
             done();
@@ -123,7 +125,7 @@ describe('api-client', function() {
             expect(err).to.exist();
             client.logout(function (err) {
               if (err) { return done(err); }
-              expect(user.logout.calledTwice).to.be.true;
+              expect(user.logout.calledTwice).to.be.true();
               user.githubLogin.restore();
               user.logout.restore();
               done();

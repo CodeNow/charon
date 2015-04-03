@@ -13,10 +13,12 @@ var expect = Code.expect;
 var dns = require('native-dns');
 var sinon = require('sinon');
 var createCount = require('callback-count');
+var dogstatsd = require('../fixtures/dogstatsd');
 
 require('../../lib/loadenv.js')();
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
+var monitor = require('../../lib/monitor');
 
 describe('query', function() {
   describe('interface', function() {
@@ -41,7 +43,7 @@ describe('query', function() {
 
       it('should ask the api to resolve a single domain name', function (done) {
         query.resolve('127.0.0.1', ['example.runnableapp.com'], function (err, records) {
-          expect(apiClient.user.fetchInternalIpForHostname.calledOnce).to.be.true;
+          expect(apiClient.user.fetchInternalIpForHostname.calledOnce).to.be.true();
           done();
         });
       });
@@ -61,7 +63,6 @@ describe('query', function() {
 
     describe('basic name resolution', function() {
       before(function (done) {
-        apiClient.user.fetchInternalIpForHostname = function() {};
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
           var response = '10.0.0.1';
           if (address == '127.0.0.2') {
@@ -193,5 +194,69 @@ describe('query', function() {
         });
       });
     }); // end 'errors'
+
+    describe('monitoring', function() {
+      beforeEach(function (done) {
+        sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+          .yields(null, '10.0.0.1');
+        dogstatsd.stubAll();
+        done();
+      });
+
+      afterEach(function (done) {
+        dogstatsd.restoreAll();
+        apiClient.user.fetchInternalIpForHostname.restore();
+        done();
+      });
+
+      it('should monitor number of lookups per query', function (done) {
+        var names = [
+          'a.runnableapp.com',
+          'b.runnableapp.com',
+          'c.runnableapp.com'
+        ];
+        var lookups = names.length;
+        var stub = monitor.client.histogram;
+        query.resolve('127.0.0.1', names, function (err, records) {
+          if (err) { return done(err); }
+          expect(stub.calledWith('charon.lookups.per.query', lookups)).to.be.true();
+          done();
+        });
+      });
+
+      it('should monitor individual lookups', function (done) {
+        var names = ['a.runnableapp.com'];
+        var stub = monitor.client.increment;
+        query.resolve('127.0.0.1', names, function (err, records) {
+          if (err) { return done(err); }
+          expect(stub.calledWith('charon.lookup')).to.be.true();
+          done();
+        });
+      });
+
+      it('should monitor lookup time', function (done) {
+        var names = ['a.runnableapp.com'];
+        var stub = monitor.client.histogram;
+        query.resolve('127.0.0.1', names, function (err, records) {
+          if (err) { return done(err); }
+          expect(stub.calledWith('charon.lookup.time')).to.be.true();
+          done();
+        });
+      });
+
+      it('should monitor lookup errors', function (done) {
+        apiClient.user.fetchInternalIpForHostname.restore();
+        sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+          .yields(new Error('API Error'));
+
+        var names = ['a.runnableapp.com'];
+        var stub = monitor.client.increment;
+
+        query.resolve('127.0.0.1', names, function (err, records) {
+          expect(stub.calledWith('charon.error.lookup')).to.be.true();
+          done();
+        });
+      });
+    });
   }); // end '.resolve()'
-});
+}); // end 'query'

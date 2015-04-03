@@ -80,16 +80,16 @@ describe('monitor', function() {
       var key = 'example.set';
       var value = 1337;
       monitor.set(key, value);
-      expect(monitor.client.set.calledOnce).to.be.true;
-      expect(monitor.client.set.calledWith(key, value)).to.be.true;
+      expect(monitor.client.set.calledOnce).to.be.true();
+      expect(monitor.client.set.calledWith(key, value)).to.be.true();
       done();
     });
 
     it('should send counter increments through datadog', function (done) {
       var key = 'example.counter';
       monitor.increment(key);
-      expect(monitor.client.increment.calledOnce).to.be.true;
-      expect(monitor.client.increment.calledWith(key)).to.be.true;
+      expect(monitor.client.increment.calledOnce).to.be.true();
+      expect(monitor.client.increment.calledWith(key)).to.be.true();
       done();
     });
 
@@ -97,8 +97,8 @@ describe('monitor', function() {
       var key = 'example.counter';
       var value = 42;
       monitor.increment(key, value);
-      expect(monitor.client.increment.calledOnce).to.be.true;
-      expect(monitor.client.increment.calledWith(key, value)).to.be.true;
+      expect(monitor.client.increment.calledOnce).to.be.true();
+      expect(monitor.client.increment.calledWith(key, value)).to.be.true();
       done();
     });
 
@@ -106,8 +106,8 @@ describe('monitor', function() {
       var key = 'example.histogram';
       var value = 420;
       monitor.histogram(key, value);
-      expect(monitor.client.histogram.calledOnce).to.be.true;
-      expect(monitor.client.histogram.calledWith(key, value)).to.be.true;
+      expect(monitor.client.histogram.calledOnce).to.be.true();
+      expect(monitor.client.histogram.calledWith(key, value)).to.be.true();
       done();
     });
 
@@ -115,8 +115,8 @@ describe('monitor', function() {
       var key = 'speed.of.light';
       var value = 299792458;
       monitor.gauge(key, value);
-      expect(monitor.client.gauge.calledOnce).to.be.true;
-      expect(monitor.client.gauge.calledWith(key, value)).to.be.true;
+      expect(monitor.client.gauge.calledOnce).to.be.true();
+      expect(monitor.client.gauge.calledWith(key, value)).to.be.true();
       done();
     });
 

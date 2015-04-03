@@ -12,15 +12,15 @@ var Code = require('code');
 var expect = Code.expect;
 var dns = require('native-dns');
 var sinon = require('sinon');
-var debug = require('debug');
-var error = debug('charon:server:error');
+var dogstatsd = require('../fixtures/dogstatsd');
 
 require('../../lib/loadenv.js')();
-
 var server = require('../../lib/server');
 var rcode = require('../../lib/dns-util').rcode;
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
+var monitor = require('../../lib/monitor');
+
 
 function dnsRequest(domain, cb) {
   var req = dns.Request({
@@ -39,7 +39,7 @@ function dnsRequest(domain, cb) {
   req.send();
 }
 
-describe('DNS Server (functional)', function() {
+describe('charon', function() {
   before(function (done) {
     sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
       .yields(null, '127.0.0.1');
@@ -59,36 +59,36 @@ describe('DNS Server (functional)', function() {
     });
   });
 
-  it('should resolve internal domain name requests', function (done) {
-    dnsRequest('example.runnableapp.com', function (err, resp) {
-      if (err) { return done(err); }
-      expect(resp.answer).to.not.be.empty();
-      expect(resp.header.rcode).to.equal(rcode.NoError);
-      done();
+  describe('server (functional)', function() {
+    it('should resolve internal domain name requests', function (done) {
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        if (err) { return done(err); }
+        expect(resp.answer).to.not.be.empty();
+        expect(resp.header.rcode).to.equal(rcode.NoError);
+        done();
+      });
     });
-  });
 
-  it('should deny external domain name requests', function (done) {
-    dnsRequest('www.google.com', function (err, resp) {
-      if (err) { return done(err); }
-      expect(resp.answer).to.be.empty();
-      expect(resp.header.rcode).to.equal(rcode.Refused);
-      done();
+    it('should deny external domain name requests', function (done) {
+      dnsRequest('www.google.com', function (err, resp) {
+        if (err) { return done(err); }
+        expect(resp.answer).to.be.empty();
+        expect(resp.header.rcode).to.equal(rcode.Refused);
+        done();
+      });
     });
-  });
 
-  it('should handle server errors appropriately', function (done) {
-    sinon.stub(query, 'resolve').yields(new Error('Server error'));
-    dnsRequest('example.runnableapp.com', function (err, resp) {
-      if (err) { return done(err); }
-      expect(resp.answer).to.be.empty();
-      expect(resp.header.rcode).to.equal(rcode.ServerFailure);
-      query.resolve.restore();
-      done();
+    it('should handle server errors appropriately', function (done) {
+      sinon.stub(query, 'resolve').yields(new Error('Server error'));
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        if (err) { return done(err); }
+        expect(resp.answer).to.be.empty();
+        expect(resp.header.rcode).to.equal(rcode.ServerFailure);
+        query.resolve.restore();
+        done();
+      });
     });
-  });
 
-  describe('error handling', function() {
     it('should report server errors', function (done) {
       sinon.stub(query, 'resolve', function () {
         server.instance.emit('error', new Error('Server Error'));
@@ -99,7 +99,7 @@ describe('DNS Server (functional)', function() {
       });
     });
 
-    it ('should report socket errors', function(done) {
+    it('should report socket errors', function(done) {
       sinon.stub(query, 'resolve', function () {
         server.instance.emit('socketError', new Error('Socket Error'));
       });
@@ -108,5 +108,79 @@ describe('DNS Server (functional)', function() {
         done();
       });
     });
-  }); // end 'errors'
-}); // end 'DNS Requests (Functional)'
+  }); // end 'server (functional)'
+
+  describe('monitoring', function () {
+    beforeEach(function (done) {
+      dogstatsd.stubAll();
+      done();
+    });
+
+    afterEach(function (done) {
+      dogstatsd.restoreAll();
+      done();
+    });
+
+    it('should monitor incoming dns requests', function (done) {
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        if (err) { return done(err); }
+        var stub = monitor.client.increment;
+        expect(stub.calledWith('charon.query')).to.be.true();
+        done();
+      });
+    });
+
+    it('should monitor total query time', function (done) {
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        if (err) { return done(err); }
+        var stub = monitor.client.histogram;
+        expect(stub.calledWith('charon.query.time')).to.be.true();
+        done();
+      });
+    });
+
+    it('should monitor invalid queries', function (done) {
+      dnsRequest('www.google.com', function (err, resp) {
+        if (err) { return done(err); }
+        var stub = monitor.client.increment;
+        expect(stub.calledWith('charon.query.refused')).to.be.true();
+        done();
+      });
+    });
+
+    it('should monitor queries that error', function (done) {
+      sinon.stub(query, 'resolve').yields(new Error('Server error'));
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        if (err) { return done(err); }
+        var stub = monitor.client.increment;
+        expect(stub.calledWith('charon.query.error')).to.be.true();
+        query.resolve.restore();
+        done();
+      });
+    });
+
+    it('should monitor server errors', function (done) {
+      sinon.stub(query, 'resolve', function () {
+        server.instance.emit('error', new Error('Server Error'));
+      });
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        query.resolve.restore();
+        var stub = monitor.client.increment;
+        expect(stub.calledWith('charon.error.server'));
+        done();
+      });
+    });
+
+    it('should monitor socket errors', function (done) {
+      sinon.stub(query, 'resolve', function () {
+        server.instance.emit('socketError', new Error('Socket Error'));
+      });
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        query.resolve.restore();
+        var stub = monitor.client.increment;
+        expect(stub.calledWith('charon.error.socket'));
+        done();
+      });
+    });
+  }); // end 'monitoring'
+}); // end 'charon'
