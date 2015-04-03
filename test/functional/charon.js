@@ -12,7 +12,6 @@ var Code = require('code');
 var expect = Code.expect;
 var dns = require('native-dns');
 var sinon = require('sinon');
-var dogstatsd = require('../fixtures/dogstatsd');
 
 require('../../lib/loadenv.js')();
 var server = require('../../lib/server');
@@ -20,7 +19,7 @@ var rcode = require('../../lib/dns-util').rcode;
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 var monitor = require('../../lib/monitor');
-
+var monitorStub = require('../fixtures/monitor');
 
 function dnsRequest(domain, cb) {
   var req = dns.Request({
@@ -112,20 +111,19 @@ describe('charon', function() {
 
   describe('monitoring', function () {
     beforeEach(function (done) {
-      dogstatsd.stubAll();
+      monitorStub.stubAll();
       done();
     });
 
     afterEach(function (done) {
-      dogstatsd.restoreAll();
+      monitorStub.restoreAll();
       done();
     });
 
     it('should monitor incoming dns requests', function (done) {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
-        var stub = monitor.client.increment;
-        expect(stub.calledWith('charon.query')).to.be.true();
+        expect(monitor.increment.calledWith('charon.query')).to.be.true();
         done();
       });
     });
@@ -133,8 +131,7 @@ describe('charon', function() {
     it('should monitor total query time', function (done) {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
-        var stub = monitor.client.histogram;
-        expect(stub.calledWith('charon.query.time')).to.be.true();
+        expect(monitor.histogram.calledWith('charon.query.time')).to.be.true();
         done();
       });
     });
@@ -142,8 +139,7 @@ describe('charon', function() {
     it('should monitor invalid queries', function (done) {
       dnsRequest('www.google.com', function (err, resp) {
         if (err) { return done(err); }
-        var stub = monitor.client.increment;
-        expect(stub.calledWith('charon.query.refused')).to.be.true();
+        expect(monitor.increment.calledWith('charon.query.refused')).to.be.true();
         done();
       });
     });
@@ -152,8 +148,7 @@ describe('charon', function() {
       sinon.stub(query, 'resolve').yields(new Error('Server error'));
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
-        var stub = monitor.client.increment;
-        expect(stub.calledWith('charon.query.error')).to.be.true();
+        expect(monitor.increment.calledWith('charon.query.error')).to.be.true();
         query.resolve.restore();
         done();
       });
@@ -165,8 +160,7 @@ describe('charon', function() {
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         query.resolve.restore();
-        var stub = monitor.client.increment;
-        expect(stub.calledWith('charon.error.server'));
+        expect(monitor.increment.calledWith('charon.error.server'));
         done();
       });
     });
@@ -177,8 +171,7 @@ describe('charon', function() {
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         query.resolve.restore();
-        var stub = monitor.client.increment;
-        expect(stub.calledWith('charon.error.socket'));
+        expect(monitor.increment.calledWith('charon.error.socket'));
         done();
       });
     });
