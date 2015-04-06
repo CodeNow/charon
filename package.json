@@ -30,11 +30,9 @@
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
-    "dotenv": "^0.4.0",
-    "eson": "^0.5.0",
-    "exec-sync": "^0.1.6",
     "loadenv": "^1.0.2",
     "native-dns": "^0.7.0",
+    "node-dogstatsd": "0.0.6",
     "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v0.44.3"
   },
   "devDependencies": {
