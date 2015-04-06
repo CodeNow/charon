@@ -15,7 +15,7 @@ var sinon = require('sinon');
 
 require('loadenv')('charon:env');
 var server = require('../../lib/server');
-var rcode = require('../../lib/dns-util').rcode;
+var rcodes = require('dns-rcodes');
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 var monitor = require('../../lib/monitor');
@@ -63,7 +63,7 @@ describe('charon', function() {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.not.be.empty();
-        expect(resp.header.rcode).to.equal(rcode.NoError);
+        expect(resp.header.rcode).to.equal(rcodes.NoError);
         done();
       });
     });
@@ -72,7 +72,7 @@ describe('charon', function() {
       dnsRequest('www.google.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
-        expect(resp.header.rcode).to.equal(rcode.Refused);
+        expect(resp.header.rcode).to.equal(rcodes.Refused);
         done();
       });
     });
@@ -82,7 +82,7 @@ describe('charon', function() {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
-        expect(resp.header.rcode).to.equal(rcode.ServerFailure);
+        expect(resp.header.rcode).to.equal(rcodes.ServerFailure);
         query.resolve.restore();
         done();
       });

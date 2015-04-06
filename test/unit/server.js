@@ -17,7 +17,6 @@ var error = debug('charon:server:error');
 
 require('loadenv')('charon:env');
 var server = require('../../lib/server');
-var rcode = require('../../lib/dns-util').rcode;
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 
