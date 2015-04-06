@@ -13,7 +13,7 @@ var expect = Code.expect;
 var dns = require('native-dns');
 var sinon = require('sinon');
 
-require('../../lib/loadenv.js')();
+require('loadenv')('charon:env');
 var server = require('../../lib/server');
 var rcode = require('../../lib/dns-util').rcode;
 var query = require('../../lib/query');

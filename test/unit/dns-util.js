@@ -10,7 +10,7 @@ var afterEach = lab.afterEach;
 var Code = require('code');
 var expect = Code.expect;
 
-require('../../lib/loadenv.js')();
+require('loadenv')('charon:env');
 var dnsUtil = require('../../lib/dns-util');
 
 describe('dns utilities', function() {

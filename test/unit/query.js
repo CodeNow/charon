@@ -14,7 +14,7 @@ var dns = require('native-dns');
 var sinon = require('sinon');
 var createCount = require('callback-count');
 
-require('../../lib/loadenv.js')();
+require('loadenv')('charon:env');
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 var monitor = require('../../lib/monitor');

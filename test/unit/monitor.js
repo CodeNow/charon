@@ -12,7 +12,7 @@ var Code = require('code');
 var expect = Code.expect;
 var sinon = require('sinon');
 
-require('../../lib/loadenv.js')();
+require('loadenv')('charon:env');
 var monitor = require('../../lib/monitor');
 var dogstatsd = require('../fixtures/dogstatsd');
 
