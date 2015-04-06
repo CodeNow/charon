@@ -64,8 +64,11 @@ describe('query', function() {
     describe('basic name resolution', function() {
       before(function (done) {
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
-          var response = '10.0.0.1';
-          if (address == '127.0.0.2') {
+          var response = null;
+          if (address == '127.0.0.1') {
+            response = '10.0.0.1';
+          }
+          else if (address == '127.0.0.2') {
             response = '10.0.0.2';
           }
           cb(null, response);
@@ -130,7 +133,7 @@ describe('query', function() {
       });
 
       it('should appropriately resolves names given remote address', function (done) {
-        var count = createCount(2, done);
+        var count = createCount(3, done);
         var names = ['example.runnableapp.com'];
 
         query.resolve('127.0.0.1', names, function (err, records) {
@@ -146,6 +149,12 @@ describe('query', function() {
           expect(records.length).to.equal(1);
           expect(records[0].name).to.equal(names[0]);
           expect(records[0].address).to.equal('10.0.0.2');
+          count.next();
+        });
+
+        query.resolve('127.0.0.3', names, function (err, records) {
+          if (err) { return done(err); }
+          expect(records.length).to.equal(0);
           count.next();
         });
       });
