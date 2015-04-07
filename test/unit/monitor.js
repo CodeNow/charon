@@ -36,7 +36,7 @@ describe('monitor', function() {
       done();
     });
 
-    it('should epose a `histogram` method', function (done) {
+    it('should expose a `histogram` method', function (done) {
       expect(monitor.histogram).to.exist();
       expect(typeof monitor.histogram).to.equal('function');
       done();
