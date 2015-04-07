@@ -19,7 +19,7 @@ require('loadenv')('charon:env');
 var server = require('../../lib/server');
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
-var monitor = require('../../lib/monitor');
+var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 
 describe('server', function() {
@@ -120,7 +120,7 @@ describe('server', function() {
 
       server.start.domain.on('error', function errorListener() {
         server.start.domain.removeListener('error', errorListener);
-        expect(monitor.increment.calledWith('charon.error.unhandled'))
+        expect(monitor.increment.calledWith('error.unhandled'))
           .to.be.true();
         apiClient.login.restore();
         done();
@@ -136,7 +136,7 @@ describe('server', function() {
 
       server.stop.domain.on('error', function errorListener() {
         server.stop.domain.removeListener('error', errorListener);
-        expect(monitor.increment.calledWith('charon.error.unhandled'))
+        expect(monitor.increment.calledWith('error.unhandled'))
           .to.be.true();
         server.instance.close.restore();
         done();
