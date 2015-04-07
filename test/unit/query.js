@@ -17,7 +17,7 @@ var createCount = require('callback-count');
 require('loadenv')('charon:env');
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
-var monitor = require('../../lib/monitor');
+var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 
 describe('query', function() {

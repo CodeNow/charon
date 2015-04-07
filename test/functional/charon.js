@@ -18,7 +18,7 @@ var server = require('../../lib/server');
 var rcodes = require('dns-rcodes');
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
-var monitor = require('../../lib/monitor');
+var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 
 function dnsRequest(domain, cb) {
