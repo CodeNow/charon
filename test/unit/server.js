@@ -19,6 +19,8 @@ require('loadenv')('charon:env');
 var server = require('../../lib/server');
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
+var monitor = require('../../lib/monitor');
+var monitorStub = require('../fixtures/monitor');
 
 describe('server', function() {
   describe('interface', function() {
@@ -97,4 +99,51 @@ describe('server', function() {
       });
     });
   }); // end 'api integration'
+
+  describe('domains', function() {
+    beforeEach(function (done) {
+      monitorStub.stubAll();
+      done();
+    });
+
+    afterEach(function (done) {
+      monitorStub.restoreAll();
+      done();
+    });
+
+    it('should use domains to catch unhandled `start` exceptions', function (done) {
+      expect(server.start.domain).to.exist();
+      sinon.stub(apiClient, 'login', function(cb) {
+        throw new Error();
+        cb();
+      });
+
+      server.start.domain.on('error', function errorListener() {
+        server.start.domain.removeListener('error', errorListener);
+        expect(monitor.increment.calledWith('charon.error.unhandled'))
+          .to.be.true();
+        apiClient.login.restore();
+        done();
+      });
+      server.start();
+    });
+
+    it ('should use domains to catch unhandled `stop` exceptions', function (done) {
+      expect(server.stop.domain).to.exist();
+      sinon.stub(server.instance, 'close', function() {
+        throw new Error();
+      });
+
+      server.stop.domain.on('error', function errorListener() {
+        server.stop.domain.removeListener('error', errorListener);
+        expect(monitor.increment.calledWith('charon.error.unhandled'))
+          .to.be.true();
+        server.instance.close.restore();
+        done();
+      });
+      server.start(function() {
+        server.stop();
+      });
+    });
+  }); // end 'domains'
 }); // end 'server'

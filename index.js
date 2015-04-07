@@ -7,9 +7,8 @@
  */
 
 var debug = require('debug');
-var server = require('./lib/server.js');
-
 var error = debug('charon:error');
+var server = require('./lib/server.js');
 
 /**
  * Callback to execute after server start.
