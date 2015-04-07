@@ -1,6 +1,6 @@
 'use strict';
 
-var monitor = require('../../lib/monitor');
+var monitor = require('monitor-dog');
 var clientMethods = ['set', 'increment', 'histogram', 'gauge'];
 var sinon = require('sinon');
 
