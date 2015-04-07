@@ -15,9 +15,8 @@ var sinon = require('sinon');
 var debug = require('debug');
 var error = debug('charon:server:error');
 
-require('../../lib/loadenv.js')();
+require('loadenv')('charon:env');
 var server = require('../../lib/server');
-var rcode = require('../../lib/dns-util').rcode;
 var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 
@@ -62,7 +61,7 @@ describe('server', function() {
       sinon.stub(apiClient, 'login').yields();
       server.start(function (err) {
         if (err) { return done(err); }
-        expect(apiClient.login.calledOnce).to.be.true;
+        expect(apiClient.login.calledOnce).to.be.true();
         apiClient.login.restore();
         done();
       });
@@ -72,7 +71,7 @@ describe('server', function() {
       sinon.stub(apiClient, 'logout').yields();
       server.stop(function (err) {
         if (err) { return done(err); }
-        expect(apiClient.logout.calledOnce).to.be.true;
+        expect(apiClient.logout.calledOnce).to.be.true();
         apiClient.logout.restore();
         done();
       });
