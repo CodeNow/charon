@@ -106,7 +106,7 @@ describe('charon', function() {
     it('should monitor incoming dns requests', function (done) {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
-        expect(monitor.increment.calledWith('charon.query')).to.be.true();
+        expect(monitor.increment.calledWith('query')).to.be.true();
         done();
       });
     });
@@ -114,7 +114,7 @@ describe('charon', function() {
     it('should monitor total query time', function (done) {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
-        expect(monitor.histogram.calledWith('charon.query.time')).to.be.true();
+        expect(monitor.histogram.calledWith('query.time')).to.be.true();
         done();
       });
     });
@@ -122,7 +122,7 @@ describe('charon', function() {
     it('should monitor invalid queries', function (done) {
       dnsRequest('www.google.com', function (err, resp) {
         if (err) { return done(err); }
-        expect(monitor.increment.calledWith('charon.query.refused')).to.be.true();
+        expect(monitor.increment.calledWith('query.refused')).to.be.true();
         done();
       });
     });
@@ -131,7 +131,7 @@ describe('charon', function() {
       sinon.stub(query, 'resolve').yields(new Error('Server error'));
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
-        expect(monitor.increment.calledWith('charon.query.error')).to.be.true();
+        expect(monitor.increment.calledWith('query.error')).to.be.true();
         query.resolve.restore();
         done();
       });
@@ -143,7 +143,7 @@ describe('charon', function() {
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         query.resolve.restore();
-        expect(monitor.increment.calledWith('charon.error.server')).to.be.true();
+        expect(monitor.increment.calledWith('error.server')).to.be.true();
         done();
       });
     });
@@ -154,7 +154,7 @@ describe('charon', function() {
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         query.resolve.restore();
-        expect(monitor.increment.calledWith('charon.error.socket')).to.be.true();
+        expect(monitor.increment.calledWith('error.socket')).to.be.true();
         done();
       });
     });

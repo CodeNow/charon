@@ -228,7 +228,7 @@ describe('query', function() {
         var stub = monitor.histogram;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
-          expect(stub.calledWith('charon.lookups.per.query', lookups)).to.be.true();
+          expect(stub.calledWith('lookups.per.query', lookups)).to.be.true();
           done();
         });
       });
@@ -238,7 +238,7 @@ describe('query', function() {
         var stub = monitor.increment;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
-          expect(stub.calledWith('charon.lookup')).to.be.true();
+          expect(stub.calledWith('lookup')).to.be.true();
           done();
         });
       });
@@ -248,7 +248,7 @@ describe('query', function() {
         var stub = monitor.histogram;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
-          expect(stub.calledWith('charon.lookup.time')).to.be.true();
+          expect(stub.calledWith('lookup.time')).to.be.true();
           done();
         });
       });
@@ -260,7 +260,7 @@ describe('query', function() {
         var names = ['a.runnableapp.com'];
         var stub = monitor.increment;
         query.resolve('127.0.0.1', names, function (err, records) {
-          expect(stub.calledWith('charon.error.lookup')).to.be.true();
+          expect(stub.calledWith('error.lookup')).to.be.true();
           done();
         });
       });
