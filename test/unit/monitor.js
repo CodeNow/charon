@@ -199,7 +199,6 @@ describe('monitor', function() {
         delete process.env.MONITOR_PREFIX;
 
         var custom = monitor.createMonitor();
-        console.log(custom);
         var methods = ['set', 'increment', 'histogram', 'gauge'];
         methods.forEach(function (method) {
           var stub = sinon.stub(custom.client, method);
