@@ -31,16 +31,19 @@
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
     "loadenv": "^1.0.3",
+    "map-utils": "^0.4.0",
     "monitor-dog": "^1.0.1",
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
     "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v0.44.3"
   },
   "devDependencies": {
+    "101": "^0.14.1",
     "code": "^1.4.0",
     "jsdoc": "^3.3.0-beta3",
     "jshint": "^2.6.3",
     "lab": "^5.5.1",
+    "rewire": "^2.3.1",
     "sinon": "^1.14.1"
   }
 }
