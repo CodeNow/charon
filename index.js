@@ -8,7 +8,7 @@
 
 var debug = require('debug');
 var error = debug('charon:error');
-var ClusterManager = require('./lib/cluster-man');
+var ClusterManager = require('cluster-man');
 var server = require('./lib/server.js');
 
 var manager = new ClusterManager(function () {
