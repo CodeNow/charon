@@ -26,7 +26,6 @@
     "curly": true
   },
   "dependencies": {
-    "101": "^0.14.1",
     "callback-count": "^0.1.0",
     "cluster-man": "^1.0.0",
     "debug": "^2.1.3",
