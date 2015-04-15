@@ -8,17 +8,17 @@
 
 var debug = require('debug');
 var error = debug('charon:error');
+var ClusterManager = require('cluster-man');
 var server = require('./lib/server.js');
 
-/**
- * Callback to execute after server start.
- * @param {Error} [err] Server start error, if applicable.
- */
-function afterStart(err) {
-  if (err) {
-    error('Could not start server: ' + err);
-    process.kill(1);
-  }
-}
+var manager = new ClusterManager(function () {
+  server.start(function (err) {
+    if (err) {
+      error('Could not start server: ' + err);
+      process.kill(1);
+    }
+  });
+});
 
-server.start(afterStart);
+// Start the cluster
+manager.start();
