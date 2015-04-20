@@ -23,11 +23,11 @@ var manager = new ClusterManager({
         process.kill(1);
       }
     });
+  },
+  beforeExit: function (done) {
+    monitor.histogram('status', 0);
+    done();
   }
-});
-
-manager.on('exit', function (err) {
-  monitor.histogram('status', 0);
 });
 
 // Start the cluster
