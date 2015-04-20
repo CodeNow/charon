@@ -103,11 +103,13 @@ describe('server', function() {
   describe('domains', function() {
     beforeEach(function (done) {
       monitorStub.stubAll();
+      var exitStub = sinon.stub(process, 'exit');
       done();
     });
 
     afterEach(function (done) {
       monitorStub.restoreAll();
+      process.exit.restore();
       done();
     });
 
@@ -122,6 +124,7 @@ describe('server', function() {
         server.start.domain.removeListener('error', errorListener);
         expect(monitor.increment.calledWith('error.unhandled'))
           .to.be.true();
+        expect(process.exit.calledOnce);
         apiClient.login.restore();
         done();
       });
@@ -139,6 +142,7 @@ describe('server', function() {
         expect(monitor.increment.calledWith('error.unhandled'))
           .to.be.true();
         server.instance.close.restore();
+        expect(process.exit.calledOnce);
         done();
       });
       server.start(function() {
