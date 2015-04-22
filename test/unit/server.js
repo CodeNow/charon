@@ -101,48 +101,92 @@ describe('server', function() {
   }); // end 'api integration'
 
   describe('domains', function() {
+    var testError = new Error();
+
     beforeEach(function (done) {
       monitorStub.stubAll();
+      var exitStub = sinon.stub(process, 'exit');
       done();
     });
 
     afterEach(function (done) {
       monitorStub.restoreAll();
+      process.exit.restore();
       done();
     });
 
     it('should use domains to catch unhandled `start` exceptions', function (done) {
       expect(server.start.domain).to.exist();
       sinon.stub(apiClient, 'login', function(cb) {
-        throw new Error();
+        throw testError;
         cb();
       });
-
-      server.start.domain.on('error', function errorListener() {
+      server.start.domain.on('error', function errorListener(err) {
+        expect(err).to.equal(testError);
         server.start.domain.removeListener('error', errorListener);
-        expect(monitor.increment.calledWith('error.unhandled'))
-          .to.be.true();
         apiClient.login.restore();
         done();
       });
       server.start();
     });
 
-    it ('should use domains to catch unhandled `stop` exceptions', function (done) {
+    it('should use domains to catch unhandled `stop` exceptions', function (done) {
       expect(server.stop.domain).to.exist();
       sinon.stub(server.instance, 'close', function() {
-        throw new Error();
+        throw testError;
       });
-
-      server.stop.domain.on('error', function errorListener() {
-        server.stop.domain.removeListener('error', errorListener);
-        expect(monitor.increment.calledWith('error.unhandled'))
-          .to.be.true();
+      server.stop.domain.on('error', function errorListener(err) {
+        expect(err).to.equal(testError);
         server.instance.close.restore();
+        server.stop.domain.removeListener('error', errorListener);
         done();
       });
       server.start(function() {
         server.stop();
+      });
+    });
+
+    describe('unhandledError', function() {
+      var domain = server.start.domain;
+
+      beforeEach(function (done) {
+        sinon.stub(apiClient, 'login', function (cb) {
+          throw new Error();
+        });
+        done();
+      });
+
+      afterEach(function (done) {
+        apiClient.login.restore();
+        done();
+      });
+
+      it('should exit the process', function (done) {
+        domain.on('error', function errorListener() {
+          expect(process.exit.calledOnce).to.be.true();
+          expect(process.exit.calledWith(1)).to.be.true();
+          domain.removeListener('error', errorListener);
+          done();
+        });
+        server.start();
+      });
+
+      it('should monitor unhandled errors', function (done) {
+        domain.on('error', function errorListener() {
+          expect(monitor.increment.calledWith('error.unhandled')).to.be.true();
+          domain.removeListener('error', errorListener);
+          done();
+        });
+        server.start();
+      });
+
+      it('should set server status monitor to "down" (0)', function (done) {
+        domain.on('error', function errorListener() {
+          expect(monitor.histogram.calledWith('status', 0)).to.be.true();
+          domain.removeListener('error', errorListener);
+          done();
+        });
+        server.start();
       });
     });
   }); // end 'domains'
