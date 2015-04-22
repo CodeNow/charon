@@ -11,6 +11,7 @@ var afterEach = lab.afterEach;
 var Code = require('code');
 var expect = Code.expect;
 var sinon = require('sinon');
+var createCount = require('callback-count');
 
 require('loadenv')('charon:env');
 var server = require('../../lib/server');
@@ -90,6 +91,14 @@ describe('charon', function() {
         done();
       });
     });
+
+    it('should not crash after many repeated requests', function (done) {
+      var numRequests = 200;
+      var count = createCount(numRequests, done);
+      for (var i = 0; i < numRequests; i++) {
+        dnsRequest('example.runnableapp.com', count.next);
+      }
+    })
   }); // end 'server (functional)'
 
   describe('monitoring', function () {
