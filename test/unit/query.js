@@ -75,12 +75,13 @@ describe('query', function() {
         });
         done();
       });
+
       after(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
         done();
       });
 
-      it('should resolve internal dns names', function (done) {
+      it('should resolve internal domain names', function (done) {
         var names = [
           'web-codenow.runnableapp.com',
           'api-codenow.runnableapp.com',
@@ -96,7 +97,7 @@ describe('query', function() {
         });
       });
 
-      it('should not resolve external dns names', function (done) {
+      it('should not resolve external domain names', function (done) {
         var names = [
           'www.google.com',
           'www.wikipedia.org',
@@ -104,7 +105,20 @@ describe('query', function() {
         ];
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
-          expect(records).to.be.null;
+          expect(records).to.be.null();
+          done();
+        });
+      });
+
+      it('should not resolve domain names that contain the filter but are external', function (done) {
+        var names = [
+          'runnableapp.com.woza.com',
+          'www.runnableapp.com.neat.com',
+          'indeed.neat.runnable.com.app.com'
+        ];
+        query.resolve('127.0.0.1', names, function (err, records) {
+          if (err) { return done(err); }
+          expect(records).to.be.null();
           done();
         });
       });
@@ -184,7 +198,7 @@ describe('query', function() {
         ];
         query.resolve('127.0.0.1', names, function (err, records) {
           expect(err).to.exist();
-          expect(records).to.be.null;
+          expect(records).to.be.null();
           done();
         });
       });
