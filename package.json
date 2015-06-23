@@ -4,7 +4,7 @@
   "description": "Internal container-to-container DNS.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node index.js | bunyan",
     "lint": "jshint index.js lib/",
     "test": "jshint index.js lib/ && NODE_ENV=test lab -v -c -a code ./test/*",
     "docs": "jsdoc -d docs/ lib/"
@@ -26,6 +26,8 @@
     "curly": true
   },
   "dependencies": {
+    "bunyan": "^1.4.0",
+    "bunyan-redis": "^0.1.4",
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
