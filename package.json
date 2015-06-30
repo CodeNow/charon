@@ -4,7 +4,7 @@
   "description": "Internal container-to-container DNS.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js | bunyan",
+    "start": "node index.js",
     "lint": "jshint index.js lib/",
     "test": "jshint index.js lib/ && NODE_ENV=test lab -v -c -a code ./test/*",
     "docs": "jsdoc -d docs/ lib/"
