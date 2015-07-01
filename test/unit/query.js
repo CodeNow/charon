@@ -42,7 +42,7 @@ describe('query', function() {
       });
 
       it('should ask the api to resolve a single domain name', function (done) {
-        query.resolve('127.0.0.1', ['example.runnableapp.com'], function (err, records) {
+        query.resolve('127.0.0.1', ['tottttes.runnableapp.com'], function (err, records) {
           expect(apiClient.user.fetchInternalIpForHostname.calledOnce).to.be.true();
           done();
         });
@@ -52,7 +52,7 @@ describe('query', function() {
         var names = [
           'web-codenow.runnableapp.com',
           'api-codenow.runnableapp.com',
-          'example.runnableapp.com'
+          'example-boooomm.runnableapp.com'
         ];
         query.resolve('127.0.0.1', names, function (err, records) {
           expect(apiClient.user.fetchInternalIpForHostname.callCount).to.equal(names.length);
@@ -148,7 +148,7 @@ describe('query', function() {
 
       it('should appropriately resolves names given remote address', function (done) {
         var count = createCount(3, done);
-        var names = ['example.runnableapp.com'];
+        var names = ['example-skldkkdnndkkslllll.runnableapp.com'];
 
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
@@ -248,7 +248,7 @@ describe('query', function() {
       });
 
       it('should monitor individual lookups', function (done) {
-        var names = ['a.runnableapp.com'];
+        var names = ['snwlldkks.runnableapp.com'];
         var stub = monitor.increment;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
@@ -258,7 +258,7 @@ describe('query', function() {
       });
 
       it('should monitor lookup time', function (done) {
-        var names = ['a.runnableapp.com'];
+        var names = ['sssssssa.runnableapp.com'];
         var stub = monitor.histogram;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
@@ -271,7 +271,7 @@ describe('query', function() {
         apiClient.user.fetchInternalIpForHostname.restore();
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
           .yields(new Error('API Error'));
-        var names = ['a.runnableapp.com'];
+        var names = ['asppsppsppsppsddd.runnableapp.com'];
         var stub = monitor.increment;
         query.resolve('127.0.0.1', names, function (err, records) {
           expect(stub.calledWith('error.lookup')).to.be.true();
