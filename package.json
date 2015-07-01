@@ -32,6 +32,7 @@
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
     "loadenv": "^1.0.3",
+    "mkc": "^1.0.4",
     "monitor-dog": "^1.0.1",
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
