@@ -24,8 +24,6 @@ var dnsRequest = require('../fixtures/dns-request');
 
 describe('charon', function() {
   before(function (done) {
-    sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
-      .yields(null, '127.0.0.1');
     sinon.stub(apiClient, 'login').yields();
     server.start(function() {
       apiClient.login.restore();
@@ -34,12 +32,22 @@ describe('charon', function() {
   });
 
   after(function (done) {
-    apiClient.user.fetchInternalIpForHostname.restore();
     sinon.stub(apiClient, 'logout').yields();
     server.stop(function() {
       apiClient.logout.restore();
       done();
     });
+  });
+
+  beforeEach(function (done) {
+    sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+      .yields(null, '127.0.0.1');
+    done();
+  });
+
+  afterEach(function (done) {
+    apiClient.user.fetchInternalIpForHostname.restore();
+    done();
   });
 
   describe('server (functional)', function() {
@@ -98,7 +106,24 @@ describe('charon', function() {
       for (var i = 0; i < numRequests; i++) {
         dnsRequest('example.runnableapp.com', count.next);
       }
-    })
+    });
+
+    it('should handle cache hits', function(done) {
+      var numRequests = 500;
+      var count = createCount(numRequests, function (err) {
+        if (err) { return done(err); }
+        expect(apiClient.user.fetchInternalIpForHostname.callCount)
+          .to.equal(1);
+        done();
+      });
+
+      var name = 'cache-hit.runnableapp.com';
+      dnsRequest(name, function (err) {
+        for (var i = 0; i < numRequests; i++) {
+          dnsRequest(name, count.next);
+        }
+      });
+    });
   }); // end 'server (functional)'
 
   describe('monitoring', function () {

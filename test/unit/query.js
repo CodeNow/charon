@@ -16,9 +16,11 @@ var createCount = require('callback-count');
 
 require('loadenv')('charon:env');
 var query = require('../../lib/query');
+var cache = query.getCache();
 var apiClient = require('../../lib/api-client');
 var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
+var pubsub = require('../../lib/pubsub');
 
 describe('query', function() {
   describe('interface', function() {
@@ -36,8 +38,14 @@ describe('query', function() {
           .yields(null, '10.0.0.1');
         done();
       });
+
       afterEach(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
+        done();
+      });
+
+      after(function (done) {
+        cache.reset();
         done();
       });
 
@@ -78,6 +86,7 @@ describe('query', function() {
 
       after(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
+        cache.reset();
         done();
       });
 
@@ -176,7 +185,6 @@ describe('query', function() {
 
     describe('errors', function() {
       before(function (done) {
-        apiClient.user.fetchInternalIpForHostname = function() {};
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
           if (name == 'valid.runnableapp.com') {
             return cb(null, '10.0.0.1');
@@ -185,8 +193,10 @@ describe('query', function() {
         });
         done();
       });
+
       after(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
+        cache.reset();
         done();
       });
 
@@ -229,6 +239,11 @@ describe('query', function() {
       afterEach(function (done) {
         monitorStub.restoreAll();
         apiClient.user.fetchInternalIpForHostname.restore();
+        done();
+      });
+
+      after(function (done) {
+        cache.reset();
         done();
       });
 
@@ -278,6 +293,124 @@ describe('query', function() {
           done();
         });
       });
+
+      it('should monitor cache misses', function(done) {
+        var address = '127.0.0.2';
+        var names = ['cache-miss.runnableapp.com'];
+        var stub = monitor.increment;
+        query.resolve(address, names, function(err, records) {
+          expect(stub.calledWith('cache.miss')).to.be.true();
+          done();
+        });
+      });
+
+      it('should monitor cache hits', function(done) {
+        var address = '127.0.0.1';
+        var names = ['cache-hit.runnableapp.com'];
+        var stub = monitor.increment;
+        query.resolve(address, names, function(err, records) {
+          if (err) { return done(err); }
+          query.resolve(address, names, function (err, records) {
+            expect(stub.calledWith('cache.hit')).to.be.true();
+            done();
+          });
+        });
+      });
+
+      it('should monitor cache sets', function(done) {
+        var address = '127.0.0.3';
+        var names = ['cache-set.runnableapp.com'];
+        var stub = monitor.increment;
+        query.resolve(address, names, function(err, records) {
+          expect(stub.calledWith('cache.set')).to.be.true();
+          done();
+        });
+      });
+
+      it('should monitor cache invalidations', function(done) {
+        pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
+        expect(monitor.increment.calledWith('cache.invalidate')).to.be.true();
+        done();
+      });
     }); // end 'monitoring'
+
+    describe('caching', function() {
+      beforeEach(function (done) {
+        cache.reset();
+        sinon.spy(cache, 'set');
+        sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+          .yields(null, '10.0.0.4');
+        done();
+      });
+
+      afterEach(function (done) {
+        cache.set.restore();
+        apiClient.user.fetchInternalIpForHostname.restore();
+        done();
+      });
+
+      it('should set cache results from api responses on miss', function(done) {
+        var address = '127.0.0.3';
+        var names = ['cache-set.runnableapp.com'];
+        var cacheKey = { name: names[0], address: address };
+        query.resolve(address, names, function (err, records) {
+          if (err) { return done(err); }
+          expect(apiClient.user.fetchInternalIpForHostname.calledOnce)
+            .to.be.true();
+          expect(cache.set.calledOnce).to.be.true();
+          expect(cache.set.firstCall.args[0]).to.deep.equal(cacheKey);
+          expect(cache.set.firstCall.args[1]).to.deep.equal(records[0]);
+          expect(cache.get(cacheKey)).to.equal(records[0]);
+          done();
+        });
+      });
+
+      it('should use cached responses on hit', function(done) {
+        var address = '127.0.0.3';
+        var names = ['cache-set.runnableapp.com'];
+        var cacheKey = { name: names[0], address: address };
+        var cacheValue = { name: names[0], address: '10.0.0.1' };
+        cache.set(cacheKey, cacheValue);
+
+        query.resolve(address, names, function (err, records) {
+          if (err) { return done(err); }
+          expect(apiClient.user.fetchInternalIpForHostname.callCount)
+            .to.equal(0);
+          expect(records[0]).to.equal(cacheValue);
+          done();
+        });
+      });
+
+      it('should invalidate correct cache entries on pubsub event', function(done) {
+        var address = '127.0.0.3';
+        var hostIps = ['10.0.0.1', '10.0.0.2', '10.0.0.3'];
+        var names = ['cache-inv1.com', 'cache-inv2.com', 'cache-inv3.com'];
+
+        // Set fake entries directly into the cache
+        names.forEach(function (name, index) {
+          var cacheKey = { name: name, address: address };
+          var cacheValue = { name: name, address: hostIps[index] };
+          cache.set(cacheKey, cacheValue);
+        });
+
+        // Ensure cache values are set before the invalidate
+        names.forEach(function (name) {
+          var cacheKey = { name: name, address: address };
+          expect(cache.get(cacheKey), "name=" + name)
+            .to.not.be.undefined();
+        });
+
+        pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
+
+        // Check if they are gone after the invalidate
+        names.forEach(function (name) {
+          expect(cache.get({ address: address, name: name }), "name=" + name)
+            .to.be.undefined();
+        });
+
+        done();
+      });
+    }); // end 'caching'
+
   }); // end '.resolve()'
 }); // end 'query'
