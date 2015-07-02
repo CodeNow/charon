@@ -107,10 +107,6 @@ the staging deploy.
 
 Specifically you will need the following:
 
-* `staging_logstash_broker_host` - The host for **Redis2** server in our staging
-  sandbox,
-* `staging_logstash_broker_port` - The port for **Redis2** server in our staging
-  sandbox,
 * `datadog_host` - The host for **datadog** in our sandbox,
 * `datadog_port` - The port for **datadog** in our sandbox,
 * `redis_host` - The host for the **Redis** server in our staging sandbox.
@@ -119,8 +115,7 @@ Specifically you will need the following:
 The resulting command will look something like this:
 
 ```
-ansible-playbook -i ./stage-hosts -e staging_logstash_broker_host=10.0.1.4 \
-                 -e staging_logstash_broker_port=33251 -e datadog_host=10.0.1.10 \
+ansible-playbook -i ./stage-hosts -e datadog_host=10.0.1.10 \
                  -e datadog_port=32854 -e redis_host=10.0.1.210 \
                  -e redis_port=33129 \
                  charon.yml
