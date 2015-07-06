@@ -1,10 +1,10 @@
 {
   "name": "charon",
-  "version": "0.4.4",
+  "version": "0.4.6",
   "description": "Internal container-to-container DNS.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js | bunyan",
+    "start": "node index.js",
     "lint": "jshint index.js lib/",
     "test": "jshint index.js lib/ && NODE_ENV=test lab -v -c -a code ./test/*",
     "unit": "NODE_ENV=test lab -v -c -a code ./test/unit/*",
@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "bunyan": "^1.4.0",
-    "bunyan-redis": "^0.1.4",
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
