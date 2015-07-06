@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "bunyan": "^1.4.0",
-    "bunyan-redis": "^0.1.4",
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
