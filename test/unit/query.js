@@ -16,7 +16,7 @@ var createCount = require('callback-count');
 
 require('loadenv')('charon:env');
 var query = require('../../lib/query');
-var cache = query.getCache();
+var cache = require('../../lib/cache');
 var apiClient = require('../../lib/api-client');
 var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
@@ -326,12 +326,6 @@ describe('query', function() {
           done();
         });
       });
-
-      it('should monitor cache invalidations', function(done) {
-        pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
-        expect(monitor.increment.calledWith('cache.invalidate')).to.be.true();
-        done();
-      });
     }); // end 'monitoring'
 
     describe('caching', function() {
@@ -371,7 +365,6 @@ describe('query', function() {
         var cacheKey = { name: names[0], address: address };
         var cacheValue = { name: names[0], address: '10.0.0.1' };
         cache.set(cacheKey, cacheValue);
-
         query.resolve(address, names, function (err, records) {
           if (err) { return done(err); }
           expect(apiClient.user.fetchInternalIpForHostname.callCount)
@@ -379,36 +372,6 @@ describe('query', function() {
           expect(records[0]).to.equal(cacheValue);
           done();
         });
-      });
-
-      it('should invalidate correct cache entries on pubsub event', function(done) {
-        var address = '127.0.0.3';
-        var hostIps = ['10.0.0.1', '10.0.0.2', '10.0.0.3'];
-        var names = ['cache-inv1.com', 'cache-inv2.com', 'cache-inv3.com'];
-
-        // Set fake entries directly into the cache
-        names.forEach(function (name, index) {
-          var cacheKey = { name: name, address: address };
-          var cacheValue = { name: name, address: hostIps[index] };
-          cache.set(cacheKey, cacheValue);
-        });
-
-        // Ensure cache values are set before the invalidate
-        names.forEach(function (name) {
-          var cacheKey = { name: name, address: address };
-          expect(cache.get(cacheKey), "name=" + name)
-            .to.not.be.undefined();
-        });
-
-        pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
-
-        // Check if they are gone after the invalidate
-        names.forEach(function (name) {
-          expect(cache.get({ address: address, name: name }), "name=" + name)
-            .to.be.undefined();
-        });
-
-        done();
       });
     }); // end 'caching'
 
