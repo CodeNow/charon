@@ -29,13 +29,9 @@ describe('cache', function() {
       .yields(null, '10.0.0.1');
     sinon.spy(cache, 'itemCount');
     monitorStub.stubAll();
-
     cache.clearReportItemCountInterval();
     clock = sinon.useFakeTimers();
     cache.setReportItemCountInterval();
-
-
-
     done();
   });
 
