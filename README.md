@@ -59,6 +59,26 @@ resolution. This means charon *ignores question types* when resolving names.
 Note: In the future we may require support for other types of records (e.g.
 `CNAME`), so this may be subject to change.
 
+### Caching
+Charon uses a multi-key in-memory LRU cache to quickly resolve records that
+have been previously requested. The cache has a maximum size determined by
+`process.env.CACHE_MAX_ENTRIES` (each entry is roughly 500 bytes).
+
+To monitor the health of the cache charon increments the following counters
+in datadog:
+
+* `charon.cache.hit` - Number of cache hits per time period
+* `charon.cache.miss` - Number of cache misses per time period
+* `charon.cache.set` - Number of cache entries set per time period
+* `charon.cache.invalidate` - Number of cache invalidations per time period
+
+Entries in the cache are keyed by both the domain name requested and the
+referrer ip address. This allows us to invalidate entire swaths of entries
+by either name or referrer address.
+
+Currently cache invalidations are only performed by referrer address. This is
+achieved by listening to pubsub events on redis with the event key provided in
+`process.env.REDIS_INVALIDATION_KEY`.
 
 ### Testing & Linting
 Before pushing changes to master make sure the source lints and tests
@@ -87,10 +107,6 @@ the staging deploy.
 
 Specifically you will need the following:
 
-* `staging_logstash_broker_host` - The host for **Redis2** server in our staging
-  sandbox,
-* `staging_logstash_broker_port` - The port for **Redis2** server in our staging
-  sandbox,
 * `datadog_host` - The host for **datadog** in our sandbox,
 * `datadog_port` - The port for **datadog** in our sandbox,
 * `redis_host` - The host for the **Redis** server in our staging sandbox.
@@ -99,8 +115,7 @@ Specifically you will need the following:
 The resulting command will look something like this:
 
 ```
-ansible-playbook -i ./stage-hosts -e staging_logstash_broker_host=10.0.1.4 \
-                 -e staging_logstash_broker_port=33251 -e datadog_host=10.0.1.10 \
+ansible-playbook -i ./stage-hosts -e datadog_host=10.0.1.10 \
                  -e datadog_port=32854 -e redis_host=10.0.1.210 \
                  -e redis_port=33129 \
                  charon.yml

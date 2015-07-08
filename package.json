@@ -7,6 +7,7 @@
     "start": "node index.js",
     "lint": "jshint index.js lib/",
     "test": "jshint index.js lib/ && NODE_ENV=test lab -v -c -a code ./test/*",
+    "unit": "NODE_ENV=test lab -v -c -a code ./test/unit/*",
     "docs": "jsdoc -d docs/ lib/"
   },
   "repository": {
@@ -31,9 +32,11 @@
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
     "loadenv": "^1.0.3",
+    "mkc": "^1.1.0",
     "monitor-dog": "^1.0.1",
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
+    "redis-pubsub-emitter": "^0.4.0",
     "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v1.0.1"
   },
   "devDependencies": {

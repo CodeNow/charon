@@ -16,9 +16,11 @@ var createCount = require('callback-count');
 
 require('loadenv')('charon:env');
 var query = require('../../lib/query');
+var cache = require('../../lib/cache');
 var apiClient = require('../../lib/api-client');
 var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
+var pubsub = require('../../lib/pubsub');
 
 describe('query', function() {
   describe('interface', function() {
@@ -36,13 +38,19 @@ describe('query', function() {
           .yields(null, '10.0.0.1');
         done();
       });
+
       afterEach(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
         done();
       });
 
+      after(function (done) {
+        cache.reset();
+        done();
+      });
+
       it('should ask the api to resolve a single domain name', function (done) {
-        query.resolve('127.0.0.1', ['example.runnableapp.com'], function (err, records) {
+        query.resolve('127.0.0.1', ['tottttes.runnableapp.com'], function (err, records) {
           expect(apiClient.user.fetchInternalIpForHostname.calledOnce).to.be.true();
           done();
         });
@@ -52,7 +60,7 @@ describe('query', function() {
         var names = [
           'web-codenow.runnableapp.com',
           'api-codenow.runnableapp.com',
-          'example.runnableapp.com'
+          'example-boooomm.runnableapp.com'
         ];
         query.resolve('127.0.0.1', names, function (err, records) {
           expect(apiClient.user.fetchInternalIpForHostname.callCount).to.equal(names.length);
@@ -78,6 +86,7 @@ describe('query', function() {
 
       after(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
+        cache.reset();
         done();
       });
 
@@ -148,7 +157,7 @@ describe('query', function() {
 
       it('should appropriately resolves names given remote address', function (done) {
         var count = createCount(3, done);
-        var names = ['example.runnableapp.com'];
+        var names = ['example-skldkkdnndkkslllll.runnableapp.com'];
 
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
@@ -176,7 +185,6 @@ describe('query', function() {
 
     describe('errors', function() {
       before(function (done) {
-        apiClient.user.fetchInternalIpForHostname = function() {};
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname', function(name, address, cb) {
           if (name == 'valid.runnableapp.com') {
             return cb(null, '10.0.0.1');
@@ -185,8 +193,10 @@ describe('query', function() {
         });
         done();
       });
+
       after(function (done) {
         apiClient.user.fetchInternalIpForHostname.restore();
+        cache.reset();
         done();
       });
 
@@ -232,6 +242,11 @@ describe('query', function() {
         done();
       });
 
+      after(function (done) {
+        cache.reset();
+        done();
+      });
+
       it('should monitor number of lookups per query', function (done) {
         var names = [
           'a.runnableapp.com',
@@ -248,7 +263,7 @@ describe('query', function() {
       });
 
       it('should monitor individual lookups', function (done) {
-        var names = ['a.runnableapp.com'];
+        var names = ['snwlldkks.runnableapp.com'];
         var stub = monitor.increment;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
@@ -258,7 +273,7 @@ describe('query', function() {
       });
 
       it('should monitor lookup time', function (done) {
-        var names = ['a.runnableapp.com'];
+        var names = ['sssssssa.runnableapp.com'];
         var stub = monitor.histogram;
         query.resolve('127.0.0.1', names, function (err, records) {
           if (err) { return done(err); }
@@ -271,13 +286,94 @@ describe('query', function() {
         apiClient.user.fetchInternalIpForHostname.restore();
         sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
           .yields(new Error('API Error'));
-        var names = ['a.runnableapp.com'];
+        var names = ['asppsppsppsppsddd.runnableapp.com'];
         var stub = monitor.increment;
         query.resolve('127.0.0.1', names, function (err, records) {
           expect(stub.calledWith('error.lookup')).to.be.true();
           done();
         });
       });
+
+      it('should monitor cache misses', function(done) {
+        var address = '127.0.0.2';
+        var names = ['cache-miss.runnableapp.com'];
+        var stub = monitor.increment;
+        query.resolve(address, names, function(err, records) {
+          expect(stub.calledWith('cache.miss')).to.be.true();
+          done();
+        });
+      });
+
+      it('should monitor cache hits', function(done) {
+        var address = '127.0.0.1';
+        var names = ['cache-hit.runnableapp.com'];
+        var stub = monitor.increment;
+        query.resolve(address, names, function(err, records) {
+          if (err) { return done(err); }
+          query.resolve(address, names, function (err, records) {
+            expect(stub.calledWith('cache.hit')).to.be.true();
+            done();
+          });
+        });
+      });
+
+      it('should monitor cache sets', function(done) {
+        var address = '127.0.0.3';
+        var names = ['cache-set.runnableapp.com'];
+        var stub = monitor.increment;
+        query.resolve(address, names, function(err, records) {
+          expect(stub.calledWith('cache.set')).to.be.true();
+          done();
+        });
+      });
     }); // end 'monitoring'
+
+    describe('caching', function() {
+      beforeEach(function (done) {
+        cache.reset();
+        sinon.spy(cache, 'set');
+        sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
+          .yields(null, '10.0.0.4');
+        done();
+      });
+
+      afterEach(function (done) {
+        cache.set.restore();
+        apiClient.user.fetchInternalIpForHostname.restore();
+        done();
+      });
+
+      it('should set cache results from api responses on miss', function(done) {
+        var address = '127.0.0.3';
+        var names = ['cache-set.runnableapp.com'];
+        var cacheKey = { name: names[0], address: address };
+        query.resolve(address, names, function (err, records) {
+          if (err) { return done(err); }
+          expect(apiClient.user.fetchInternalIpForHostname.calledOnce)
+            .to.be.true();
+          expect(cache.set.calledOnce).to.be.true();
+          expect(cache.set.firstCall.args[0]).to.deep.equal(cacheKey);
+          expect(cache.set.firstCall.args[1]).to.deep.equal(records[0]);
+          expect(cache.get(cacheKey)).to.equal(records[0]);
+          done();
+        });
+      });
+
+      it('should use cached responses on hit', function(done) {
+        var address = '127.0.0.3';
+        var names = ['cache-set.runnableapp.com'];
+        var cacheKey = { name: names[0], address: address };
+        var cacheValue = { name: names[0], address: '10.0.0.1' };
+        cache.set(cacheKey, cacheValue);
+        query.resolve(address, names, function (err, records) {
+          if (err) { return done(err); }
+          expect(apiClient.user.fetchInternalIpForHostname.callCount)
+            .to.equal(0);
+          expect(records[0]).to.equal(cacheValue);
+          done();
+        });
+      });
+    }); // end 'caching'
+
   }); // end '.resolve()'
 }); // end 'query'
