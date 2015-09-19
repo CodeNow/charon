@@ -216,7 +216,7 @@ describe('functional', function() {
           .to.not.be.undefined();
       });
 
-      pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
+      pubsub.emit(cache.getRedisInvalidationChannel(), '127.0.0.3');
 
       // Check if they are gone after the invalidate
       names.forEach(function (name) {
