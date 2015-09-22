@@ -37,7 +37,7 @@
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
     "redis-pubsub-emitter": "^0.4.0",
-    "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#charon-service"
+    "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#c3cc8f25a3a75334a2fadc0b005b28cbc33d023e"
   },
   "devDependencies": {
     "code": "^1.4.0",
