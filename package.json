@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "lint": "jshint index.js lib/",
-    "test": "jshint index.js lib/ && NODE_ENV=test lab -m 5000 -v -c -a code ./test/*",
-    "unit": "NODE_ENV=test lab -v -c -a code ./test/unit/*",
+    "test": "jshint index.js lib/ && NODE_ENV=test lab -m 5000 -l -v -c -a code ./test/*",
+    "unit": "NODE_ENV=test lab -l -v -c -a code ./test/unit/*",
     "docs": "jsdoc -d docs/ lib/"
   },
   "repository": {
