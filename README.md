@@ -8,14 +8,18 @@ dynamically resolve ip addresses for container domain names within our system.
 ### Overview
 
 Charon is a [UDP](http://en.wikipedia.org/wiki/User_Datagram_Protocol) based DNS
-server that is responsible for resolving domain names between containers. Name
-resolution is contextualized by way of the requesting container's IP address,
-and actual lookups are performed by querying the graph database through the API.
+server that is responsible for resolving domain names between containers. It
+runs as an upstart service on each dock and is responsible for resolving
+container-to-container names for all containers on that dock.
 
-Charon is also a specialized DNS, meaning it will ignore queries for
-non-container domain names (e.g. domains that do not match `*.runnableapp.com`).
-For example when given a valid query, such as
-`stage-api-codenow.runnableapp.com`, the response will look something like this:
+Name resolutions are given context via the container's local ip address (172.x.y.z),
+and the dock's VPC address (10.x.y.z). These values are passed to the API which
+performs a lookup in the graph database in an attempt to resolve the name.
+
+Charon is also highly specialized. It will ignore queries for non-container
+domain names (e.g. domains that do not match `*.runnableapp.com`). For example
+when given a valid query, such as `stage-api-codenow.runnableapp.com`, the
+response will look something like this:
 
 ```
 ;; QUESTION SECTION:
@@ -50,7 +54,7 @@ If the server is not provided with at least one internal container name to
 resolved, it will bypass any resolution attempts and output a warning:
 
 ```
-charon:query:warning No internal container domain names given, skipping.
+[DEBUG] No internal container domain names given, skipping.
 ```
 
 Finally, Charon only supports the resolution of `A` records, since other types

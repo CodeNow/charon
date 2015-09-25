@@ -15,6 +15,7 @@ var sinon = require('sinon');
 var createCount = require('callback-count');
 
 require('loadenv')('charon:env');
+var os = require('os');
 var monitor = require('monitor-dog');
 var pubsub = require('../../lib/pubsub');
 var cache = require('../../lib/cache');
@@ -27,67 +28,123 @@ describe('cache', function() {
   beforeEach(function (done) {
     sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
       .yields(null, '10.0.0.1');
-    sinon.spy(cache, 'itemCount');
     monitorStub.stubAll();
-    cache.clearReportItemCountInterval();
     clock = sinon.useFakeTimers();
-    cache.setReportItemCountInterval();
     done();
   });
 
   afterEach(function (done) {
     apiClient.user.fetchInternalIpForHostname.restore();
     monitorStub.restoreAll();
-    cache.itemCount.restore();
     cache.reset();
     clock.restore();
     done();
   });
 
-  describe('monitoring', function() {
-    it('should periodically report cache usage statistics', function(done) {
+  describe('setReportItemCountInterval', function() {
+    var itemCount = 1337;
+
+    beforeEach(function (done) {
+      cache.setReportItemCountInterval();
+      sinon.stub(cache, 'itemCount').returns(itemCount);
+      done();
+    });
+
+    afterEach(function (done) {
+      cache.clearReportItemCountInterval();
+      cache.itemCount.restore();
+      done();
+    });
+
+    it('should set the cache entries report interval', function(done) {
       clock.tick(process.env.CACHE_REPORT_INTERVAL);
-      expect(cache.itemCount.calledOnce).to.be.true();
-      expect(monitor.histogram.calledWith('cache.entries')).to.be.true();
+      expect(monitor.histogram.calledOnce).to.be.true();
       done();
     });
 
-    it('should monitor cache invalidations', function(done) {
-      pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
-      expect(monitor.increment.calledWith('cache.invalidate')).to.be.true();
+    it('should not set the interval if already set', function(done) {
+      cache.setReportItemCountInterval();
+      clock.tick(process.env.CACHE_REPORT_INTERVAL);
+      expect(monitor.histogram.calledOnce).to.be.true();
       done();
     });
-  }); // end 'monitoring'
 
-  describe('pubsub', function() {
-    it('should invalidate correct cache entries on pubsub event', function(done) {
-      var address = '127.0.0.3';
-      var hostIps = ['10.0.0.1', '10.0.0.2', '10.0.0.3'];
-      var names = ['cache-inv1.com', 'cache-inv2.com', 'cache-inv3.com'];
-
-      // Set fake entries directly into the cache
-      names.forEach(function (name, index) {
-        var cacheKey = { name: name, address: address };
-        var cacheValue = { name: name, address: hostIps[index] };
-        cache.set(cacheKey, cacheValue);
-      });
-
-      // Ensure cache values are set before the invalidate
-      names.forEach(function (name) {
-        var cacheKey = { name: name, address: address };
-        expect(cache.get(cacheKey), "name=" + name)
-          .to.not.be.undefined();
-      });
-
-      pubsub.emit(process.env.REDIS_INVALIDATION_KEY, '127.0.0.3');
-
-      // Check if they are gone after the invalidate
-      names.forEach(function (name) {
-        expect(cache.get({ address: address, name: name }), "name=" + name)
-          .to.be.undefined();
-      });
-
+    it('should report the correct number of entries', function(done) {
+      clock.tick(process.env.CACHE_REPORT_INTERVAL);
+      expect(monitor.histogram.firstCall.args[1]).to.equal(itemCount);
       done();
     });
-  }); // end 'pubsub'
-});
+  }); // end 'setReportItemCountInterval'
+
+  describe('clearReportItemCountInterval', function() {
+    it('should clear the cache entries report interval', function(done) {
+      cache.clearReportItemCountInterval();
+      clock.tick(process.env.CACHE_REPORT_INTERVAL);
+      expect(monitor.histogram.calledOnce).to.be.false();
+      done();
+    });
+  }); // end 'clearReportItemCountInterval'
+
+  describe('getRedisInvalidationChannel', function() {
+    var networkInterfacesMock = {
+      'eth0': [
+        {
+          address: 'fe80::3636:3bff:fec9:69ac',
+          family: 'IPv6'
+        },
+        {
+          address: '10.20.128.45',
+          family: 'IPv4'
+        }
+      ]
+    };
+
+    beforeEach(function (done) {
+      sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
+      done();
+    });
+
+    afterEach(function (done) {
+      os.networkInterfaces.restore();
+      done();
+    });
+
+    it('should correctly determine the channel', function(done) {
+      var expectedChannel = [
+        process.env.REDIS_INVALIDATION_KEY,
+        networkInterfacesMock['eth0'][1].address
+      ].join(':');
+      expect(cache.getRedisInvalidationChannel()).to.equal(expectedChannel);
+      done();
+    });
+
+    it('should use the global channel without `eth0`', function(done) {
+      os.networkInterfaces.returns({});
+      expect(cache.getRedisInvalidationChannel())
+        .to.equal(process.env.REDIS_INVALIDATION_KEY);
+      done();
+    });
+  }); // end 'getRedisInvalidationChannel'
+
+  describe('invalidate', function() {
+    beforeEach(function (done) {
+      sinon.spy(cache, 'purge');
+      done();
+    });
+
+    afterEach(function (done) {
+      cache.purge.restore();
+      done();
+    });
+
+    it('should purge cache entries with the given local ip', function(done) {
+      var localIp = '172.0.0.0';
+      cache.invalidate(localIp);
+      expect(cache.purge.calledOnce).to.be.true();
+      expect(cache.purge.firstCall.args[0]).to.deep.equal({
+        address: localIp
+      });
+      done();
+    });
+  }); // end 'invalidate'
+}); // end 'cache'

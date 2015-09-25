@@ -21,8 +21,10 @@ var apiClient = require('../../lib/api-client');
 var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 var dnsRequest = require('../fixtures/dns-request');
+var cache = require('../../lib/cache');
+var pubsub = require('../../lib/pubsub');
 
-describe('charon', function() {
+describe('functional', function() {
   before(function (done) {
     sinon.stub(apiClient, 'login').yields();
     server.start(function() {
@@ -50,7 +52,7 @@ describe('charon', function() {
     done();
   });
 
-  describe('server (functional)', function() {
+  describe('server', function() {
     it('should resolve internal domain name requests', function (done) {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
@@ -124,7 +126,7 @@ describe('charon', function() {
         }
       });
     });
-  }); // end 'server (functional)'
+  }); // end 'server'
 
   describe('monitoring', function () {
     beforeEach(function (done) {
@@ -193,4 +195,36 @@ describe('charon', function() {
       });
     });
   }); // end 'monitoring'
-}); // end 'charon'
+
+  describe('cache', function() {
+    it('should invalidate correct cache entries on pubsub event', function(done) {
+      var address = '127.0.0.3';
+      var hostIps = ['10.0.0.1', '10.0.0.2', '10.0.0.3'];
+      var names = ['cache-inv1.com', 'cache-inv2.com', 'cache-inv3.com'];
+
+      // Set fake entries directly into the cache
+      names.forEach(function (name, index) {
+        var cacheKey = { name: name, address: address };
+        var cacheValue = { name: name, address: hostIps[index] };
+        cache.set(cacheKey, cacheValue);
+      });
+
+      // Ensure cache values are set before the invalidate
+      names.forEach(function (name) {
+        var cacheKey = { name: name, address: address };
+        expect(cache.get(cacheKey), "name=" + name)
+          .to.not.be.undefined();
+      });
+
+      pubsub.emit(cache.getRedisInvalidationChannel(), '127.0.0.3');
+
+      // Check if they are gone after the invalidate
+      names.forEach(function (name) {
+        expect(cache.get({ address: address, name: name }), "name=" + name)
+          .to.be.undefined();
+      });
+
+      done();
+    });
+  }); // end 'pubsub'
+}); // end 'functional'
