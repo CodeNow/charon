@@ -37,7 +37,7 @@
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
     "redis-pubsub-emitter": "^0.4.0",
-    "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v4.6.1"
+    "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#7a5ab7e4b1c658260179a7a4112f8c2266fd1bbd"
   },
   "devDependencies": {
     "code": "^1.4.0",
