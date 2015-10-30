@@ -23,6 +23,7 @@ var monitorStub = require('../fixtures/monitor');
 var dnsRequest = require('../fixtures/dns-request');
 var cache = require('../../lib/cache');
 var pubsub = require('../../lib/pubsub');
+var errorCat = require('error-cat');
 
 describe('functional', function() {
   before(function (done) {
@@ -44,11 +45,13 @@ describe('functional', function() {
   beforeEach(function (done) {
     sinon.stub(apiClient.user, 'fetchInternalIpForHostname')
       .yields(null, '127.0.0.1');
+    sinon.stub(errorCat, 'report');
     done();
   });
 
   afterEach(function (done) {
     apiClient.user.fetchInternalIpForHostname.restore();
+    errorCat.report.restore();
     done();
   });
 
@@ -87,6 +90,7 @@ describe('functional', function() {
         server.instance.emit('error', new Error('Server Error'));
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
+        expect(errorCat.report.calledOnce).to.be.true();
         query.resolve.restore();
         done();
       });
@@ -97,6 +101,7 @@ describe('functional', function() {
         server.instance.emit('socketError', new Error('Socket Error'));
       });
       dnsRequest('example.runnableapp.com', function (err, resp) {
+        expect(errorCat.report.calledOnce).to.be.true();
         query.resolve.restore();
         done();
       });

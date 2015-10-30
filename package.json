@@ -31,6 +31,7 @@
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
+    "error-cat": "^1.4.0",
     "loadenv": "^1.0.3",
     "mkc": "^1.1.0",
     "monitor-dog": "^1.0.1",

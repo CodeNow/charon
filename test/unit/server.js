@@ -21,6 +21,7 @@ var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
+var errorCat = require('error-cat');
 
 describe('server', function() {
   describe('interface', function() {
@@ -106,12 +107,14 @@ describe('server', function() {
     beforeEach(function (done) {
       monitorStub.stubAll();
       var exitStub = sinon.stub(process, 'exit');
+      sinon.stub(errorCat, 'report');
       done();
     });
 
     afterEach(function (done) {
       monitorStub.restoreAll();
       process.exit.restore();
+      errorCat.report.restore();
       done();
     });
 
@@ -183,6 +186,15 @@ describe('server', function() {
       it('should set server status monitor to "down" (0)', function (done) {
         domain.on('error', function errorListener() {
           expect(monitor.histogram.calledWith('status', 0)).to.be.true();
+          domain.removeListener('error', errorListener);
+          done();
+        });
+        server.start();
+      });
+
+      it('should report the error to rollbar', function(done) {
+        domain.on('error', function errorListener() {
+          expect(errorCat.report.calledOnce).to.be.true();
           domain.removeListener('error', errorListener);
           done();
         });
