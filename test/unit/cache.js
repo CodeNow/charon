@@ -41,6 +41,14 @@ describe('cache', function() {
     done();
   });
 
+  describe('options', function() {
+    it('should pass correct options', function(done) {
+      expect(cache.cache._max).to.equal(process.env.CACHE_MAX_ENTRIES);
+      expect(cache.cache._maxAge).to.equal(process.env.CACHE_MAX_AGE);
+      done();
+    });
+  });
+
   describe('setReportItemCountInterval', function() {
     var itemCount = 1337;
 
