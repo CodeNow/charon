@@ -41,6 +41,14 @@ describe('cache', function() {
     done();
   });
 
+  describe('options', function() {
+    it('should pass correct options', function(done) {
+      expect(cache.cache._max).to.equal(process.env.CACHE_MAX_ENTRIES);
+      expect(cache.cache._maxAge).to.equal(process.env.CACHE_MAX_AGE);
+      done();
+    });
+  });
+
   describe('setReportItemCountInterval', function() {
     var itemCount = 1337;
 
@@ -147,4 +155,42 @@ describe('cache', function() {
       done();
     });
   }); // end 'invalidate'
+
+  describe('expire', function() {
+    var ctx = {};
+    beforeEach(function (done) {
+      ctx.originalMaxAge = process.env.CACHE_MAX_AGE;
+      process.env.CACHE_MAX_AGE = 100;
+      ctx.cache = cache._create();
+      done();
+    });
+    afterEach(function (done) {
+      process.env.CACHE_MAX_AGE = ctx.originalMaxAge;
+      done();
+    });
+    it('shouild expire after max age', function(done) {
+      var name = 'funky.runnableapp.com';
+      var record = {
+        name: name,
+        address: '192.20.128.1',
+        ttl: process.env.DEFAULT_TTL
+      };
+      ctx.cache.set({ name: name, address: '10.20.128.45' }, record);
+      var cachedRecord = ctx.cache.get({
+        name: name,
+        address: '10.20.128.45'
+      });
+      expect(cachedRecord).to.exist();
+      expect(cachedRecord).to.deep.equal(record);
+      clock.tick(110);
+      var cachedRecordAfterTimeout = ctx.cache.get({
+        name: name,
+        address: '10.20.128.45'
+      });
+      console.log('aaatick', cachedRecordAfterTimeout);
+      expect(cachedRecordAfterTimeout).to.not.exist();
+      done();
+    });
+  });
+
 }); // end 'cache'
