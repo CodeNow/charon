@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "lint": "jshint index.js lib/",
-    "test": "jshint index.js lib/ && NODE_ENV=test lab -m 5000 -l -v -c -a code ./test/*",
-    "unit": "NODE_ENV=test lab -l -v -c -a code ./test/unit/*",
+    "test": "jshint index.js lib/ && NODE_ENV=test LOG_LEVEL=none lab -m 5000 -l -v -c -a code ./test/*",
+    "unit": "NODE_ENV=test LOG_LEVEL=none lab -l -v -c -a code ./test/unit/*",
     "docs": "jsdoc -d docs/ lib/"
   },
   "repository": {
@@ -27,12 +27,15 @@
     "curly": true
   },
   "dependencies": {
+    "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
+    "error-cat": "^1.4.0",
+    "ip": "^1.1.0",
     "loadenv": "^1.0.3",
-    "mkc": "^1.1.0",
+    "mkc": "^1.3.0",
     "monitor-dog": "^1.0.1",
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
@@ -40,10 +43,11 @@
     "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v4.8.2"
   },
   "devDependencies": {
+    "101": "^1.2.0",
     "code": "^1.4.0",
     "jsdoc": "^3.3.0-beta3",
     "jshint": "^2.6.3",
     "lab": "^5.5.1",
-    "sinon": "^1.14.1"
+    "sinon": "^1.17.2"
   }
 }
