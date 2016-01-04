@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "lint": "jshint index.js lib/",
-    "test": "jshint index.js lib/ && NODE_ENV=test LOG_LEVEL=none lab -m 5000 -l -v -c -a code ./test/*",
     "unit": "NODE_ENV=test LOG_LEVEL=none lab -l -v -c -a code ./test/unit/*",
-    "docs": "jsdoc -d docs/ lib/"
+    "functional": "NODE_ENV=test LOG_LEVEL=none lab -l -v -a code -m 5000 ./test/functional/*",
+    "test": "npm run lint && npm run unit && npm run functional"
   },
   "repository": {
     "type": "git",

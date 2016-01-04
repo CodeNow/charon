@@ -16,29 +16,23 @@ var createCount = require('callback-count');
 require('loadenv')('charon:env');
 var server = require('../../lib/server');
 var rcodes = require('dns-rcodes');
-var query = require('../../lib/query');
 var apiClient = require('../../lib/api-client');
 var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 var dnsRequest = require('../fixtures/dns-request');
 var cache = require('../../lib/cache');
-var pubsub = require('../../lib/pubsub');
+var apiClient = require('../../lib/api-client');
+var Promise = require('bluebird');
 
 describe('functional', function() {
   before(function (done) {
-    sinon.stub(apiClient, 'login').yields();
-    server.start(function() {
-      apiClient.login.restore();
-      done();
-    });
+    sinon.stub(apiClient, 'login').returns(Promise.resolve());
+    server.start().then(done);
   });
 
   after(function (done) {
-    sinon.stub(apiClient, 'logout').yields();
-    server.stop(function() {
-      apiClient.logout.restore();
-      done();
-    });
+    apiClient.login.restore();
+    done();
   });
 
   beforeEach(function (done) {
@@ -72,32 +66,14 @@ describe('functional', function() {
     });
 
     it('should handle server errors appropriately', function (done) {
-      sinon.stub(query, 'resolve').yields(new Error('Server error'));
+      sinon.stub(apiClient, 'resolveName', function () {
+        return Promise.reject(new Error('Server error'));
+      });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
         expect(resp.header.rcode).to.equal(rcodes.ServerFailure);
-        query.resolve.restore();
-        done();
-      });
-    });
-
-    it('should report server errors', function (done) {
-      sinon.stub(query, 'resolve', function () {
-        server.instance.emit('error', new Error('Server Error'));
-      });
-      dnsRequest('example.runnableapp.com', function (err, resp) {
-        query.resolve.restore();
-        done();
-      });
-    });
-
-    it('should report socket errors', function(done) {
-      sinon.stub(query, 'resolve', function () {
-        server.instance.emit('socketError', new Error('Socket Error'));
-      });
-      dnsRequest('example.runnableapp.com', function (err, resp) {
-        query.resolve.restore();
+        apiClient.resolveName.restore();
         done();
       });
     });
@@ -164,33 +140,13 @@ describe('functional', function() {
     });
 
     it('should monitor queries that error', function (done) {
-      sinon.stub(query, 'resolve').yields(new Error('Server error'));
+      sinon.stub(apiClient, 'resolveName', function () {
+        return Promise.reject(new Error('Server error'));
+      });
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(monitor.increment.calledWith('query.error')).to.be.true();
-        query.resolve.restore();
-        done();
-      });
-    });
-
-    it('should monitor server errors', function (done) {
-      sinon.stub(query, 'resolve', function () {
-        server.instance.emit('error', new Error('Server Error'));
-      });
-      dnsRequest('example.runnableapp.com', function (err, resp) {
-        query.resolve.restore();
-        expect(monitor.increment.calledWith('error.server')).to.be.true();
-        done();
-      });
-    });
-
-    it('should monitor socket errors', function (done) {
-      sinon.stub(query, 'resolve', function () {
-        server.instance.emit('socketError', new Error('Socket Error'));
-      });
-      dnsRequest('example.runnableapp.com', function (err, resp) {
-        query.resolve.restore();
-        expect(monitor.increment.calledWith('error.socket')).to.be.true();
+        apiClient.resolveName.restore();
         done();
       });
     });
@@ -216,7 +172,7 @@ describe('functional', function() {
           .to.not.be.undefined();
       });
 
-      pubsub.emit(cache.getRedisInvalidationChannel(), '127.0.0.3');
+      cache.pubsub.emit(cache.getRedisInvalidationChannel(), '127.0.0.3');
 
       // Check if they are gone after the invalidate
       names.forEach(function (name) {
