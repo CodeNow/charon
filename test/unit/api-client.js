@@ -122,10 +122,9 @@ describe('api-client', function() {
 
     it('should reject on API errors', function (done) {
       var apiError = new Error('go figure');
-      client.user.fetchInternalIpForHostname.yieldsAsync(apiError);
+      client.user.fetchInternalIpForHostname.yields(apiError);
       client.resolveName('name', 'address').asCallback(function (err) {
-        expect(err).to.equal(apiError);
-        expect(err.rcode).to.equal(rcodes.ServerFailure);
+        expect(err.cause).to.equal(apiError);
         done();
       });
     });
