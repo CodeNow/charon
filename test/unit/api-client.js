@@ -7,6 +7,7 @@ var it = lab.it;
 var before = lab.before;
 var after = lab.after;
 var afterEach = lab.afterEach;
+var beforeEach = lab.beforeEach;
 var Code = require('code');
 var expect = Code.expect;
 var dns = require('native-dns');
@@ -15,124 +16,154 @@ var debug = require('debug');
 var error = debug('charon:server:error');
 
 require('loadenv')('charon:env');
-var client = require('../../lib/api-client.js');
-var user = client.user;
+var client = require('../../lib/api-client');
+var cache = require('../../lib/cache');
+var rcodes = require('dns-rcodes');
 
 describe('api-client', function() {
+  var user = client.user;
+
   describe('interface', function() {
     it('should expose the api user', function (done) {
-      expect(client.user).to.exist();
-      done();
-    });
-
-    it('should expose a login method', function (done) {
-      expect(client.login).to.exist();
-      expect(typeof client.login).to.equal('function');
-      done();
-    });
-
-    it('should expose a logout method', function (done) {
-      expect(client.logout).to.exist();
-      expect(typeof client.logout).to.equal('function');
+      expect(user).to.exist();
       done();
     });
   }); // end 'interface'
 
-  describe('behaviors', function() {
-    describe('.login()', function() {
-      afterEach(function (done) {
-        client.logout(done);
-        user.githubLogin.restore();
-        user.logout.restore();
-      });
+  describe('login', function() {
+    beforeEach(function (done) {
+      sinon.stub(user, 'githubLogin').yields();
+      done();
+    });
 
-      it('should login correctly', function (done) {
-        sinon.stub(user, 'githubLogin').yields();
-        sinon.stub(user, 'logout').yields();
-        var stub = user.githubLogin;
-        client.login(function (err) {
-          if (err) { return done(err); }
-          expect(stub.calledOnce).to.be.true();
-          expect(stub.calledWith(process.env.API_TOKEN)).to.be.true();
-          done();
-        })
-      });
+    afterEach(function (done) {
+      user.githubLogin.restore();
+      done();
+    });
 
-      it('should ignore login if already logged in', function (done) {
-        sinon.stub(user, 'githubLogin').yields();
-        sinon.stub(user, 'logout').yields();
-        client.login(function (err) {
-          if (err) { return done(err); }
-          client.login(function (err) {
-            if (err) { return done(err); }
-            expect(user.githubLogin.calledOnce).to.be.true();
-            done();
-          })
+    it('should login correctly', function (done) {
+      client.login().asCallback(function (err) {
+        if (err) { return done(err); }
+        expect(user.githubLogin.calledOnce).to.be.true();
+        expect(user.githubLogin.calledWith(process.env.API_TOKEN)).to.be.true();
+        done();
+      });
+    });
+
+    it('should correctly handle login errors', function (done) {
+      var loginError = new Error('API Error');
+      user.githubLogin.yields(loginError);
+      client.login().asCallback(function (err) {
+        expect(err).to.equal(loginError);
+        done();
+      });
+    })
+  }); // end 'login'
+
+  describe('resolveName', function () {
+    var hostIP = '10.0.0.1';
+
+    beforeEach(function (done) {
+      sinon.stub(client.user, 'fetchInternalIpForHostname')
+        .yieldsAsync(null, hostIP);
+      sinon.stub(cache, 'has').returns(false);
+      sinon.stub(cache, 'get');
+      sinon.stub(cache, 'set');
+      done();
+    });
+
+    afterEach(function (done) {
+      client.user.fetchInternalIpForHostname.restore();
+      cache.has.restore();
+      cache.get.restore();
+      cache.set.restore();
+      done();
+    });
+
+    it('should returned cached records', function (done) {
+      var name = 'name.com';
+      var address = '172.0.0.1';
+      var key = { name: name, address: address };
+      var cachedRecord = { cached: true };
+      cache.has.returns(true);
+      cache.get.returns(cachedRecord);
+      client.resolveName(name, address).asCallback(function (err, record) {
+        expect(err).to.not.exist();
+        expect(cache.has.calledOnce).to.be.true();
+        expect(cache.has.firstCall.args[0]).to.deep.equal(key);
+        expect(cache.get.calledOnce).to.be.true();
+        expect(cache.get.firstCall.args[0]).to.deep.equal(key);
+        expect(record).to.equal(cachedRecord);
+        done();
+      });
+    });
+
+    it('should reject if an error occurs before the lookup', function (done) {
+      var unexpectedError = new Error('This is error sparta, sucka');
+      cache.has.throws(unexpectedError);
+      client.resolveName('name', 'address').asCallback(function (err) {
+        expect(err).to.equal(unexpectedError);
+        done();
+      });
+    });
+
+    it('should lookup records via the API', function (done) {
+      var name = 'name.com';
+      var address = '172.0.0.0';
+      client.resolveName(name, address).asCallback(function (err, record) {
+        expect(err).to.not.exist();
+        expect(client.user.fetchInternalIpForHostname.calledOnce).to.be.true();
+        expect(client.user.fetchInternalIpForHostname.calledWith(
+          name, address
+        )).to.be.true();
+        done();
+      });
+    });
+
+    it('should reject on API errors', function (done) {
+      var apiError = new Error('go figure');
+      client.user.fetchInternalIpForHostname.yields(apiError);
+      client.resolveName('name', 'address').asCallback(function (err) {
+        expect(err.cause).to.equal(apiError);
+        done();
+      });
+    });
+
+    it('should reject if the API returns an invalid host IP', function (done) {
+      client.user.fetchInternalIpForHostname.yieldsAsync(null, 'not-good.2@@@');
+      client.resolveName('name', 'address').asCallback(function (err) {
+        expect(err).to.exist();
+        expect(err.message).to.equal('Invalid Ip Return by API');
+        expect(err.rcode).to.equal(rcodes.Refused);
+        done();
+      });
+    });
+
+    it('should set the cache entry', function (done) {
+      var name = 'name.com';
+      var address = '172.0.0.1';
+      var key = { name: name, address: address };
+      client.resolveName(name, address).asCallback(function (err, record) {
+        expect(err).to.not.exist();
+        expect(cache.set.calledOnce).to.be.true();
+        expect(cache.set.firstCall.args[0]).to.deep.equal(key);
+        expect(cache.set.firstCall.args[1]).to.deep.equal(record);
+        done();
+      });
+    });
+
+    it('should resolve with the record', function (done) {
+      var name = 'name.com';
+      var address = '172.0.0.0';
+      client.resolveName(name, address).asCallback(function (err, record) {
+        expect(err).to.not.exist();
+        expect(record).to.deep.equal({
+          name: name,
+          address: hostIP,
+          ttl: process.env.DEFAULT_TTL
         });
+        done();
       });
-
-      it('should correctly handle login errors', function (done) {
-        sinon.stub(user, 'githubLogin')
-          .onCall(0).yields(new Error('API Error'))
-          .onCall(1).yields();
-        sinon.stub(user, 'logout').yields();
-
-        client.login(function (err) {
-          expect(err).to.exist();
-          client.login(function (err) {
-            if (err) { return done(err); }
-            expect(user.githubLogin.calledTwice).to.be.true();
-            done();
-          });
-        });
-      })
-    }); // end 'login'
-
-    describe('.logout()', function() {
-      it('should ignore logout if not logged in', function (done) {
-        sinon.stub(user, 'logout').yields();
-        client.logout(function (err) {
-          if (err) { return done(err); }
-          expect(user.logout.callCount).to.equal(0);
-          user.logout.restore();
-          done();
-        });
-      });
-
-      it('should logout correctly', function (done) {
-        sinon.stub(user, 'githubLogin').yields();
-        sinon.stub(user, 'logout').yields();
-        client.login(function (err) {
-          if (err) { return done(err); }
-          client.logout(function (err) {
-            if (err) { return done(err); }
-            expect(user.logout.calledOnce).to.be.true();
-            user.githubLogin.restore();
-            user.logout.restore();
-            done();
-          })
-        });
-      });
-
-      it('should correctly handle logout errors', function (done) {
-        sinon.stub(user, 'githubLogin').yields();
-        sinon.stub(user, 'logout')
-          .onCall(0).yields(new Error('API Error'))
-          .onCall(1).yields();
-        client.login(function (err) {
-          if (err) { return done(err); }
-          client.logout(function (err) {
-            expect(err).to.exist();
-            client.logout(function (err) {
-              if (err) { return done(err); }
-              expect(user.logout.calledTwice).to.be.true();
-              user.githubLogin.restore();
-              user.logout.restore();
-              done();
-            });
-          });
-        });
-      });
-    }); // end 'logout'
-  }); // end 'behaviors'
+    });
+  }); // end 'resolveName'
 }); // end 'api-client'

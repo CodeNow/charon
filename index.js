@@ -6,13 +6,4 @@
  * @author Ryan Sandor Richards
  */
 
-var debug = require('debug');
-var error = debug('charon:error');
-var server = require('./lib/server.js');
-
-server.start(function (err) {
-  if (err) {
-    error('Could not start server: ' + err);
-    process.kill(1);
-  }
-});
+require('./lib/server').start();

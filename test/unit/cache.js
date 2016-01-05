@@ -17,10 +17,11 @@ var createCount = require('callback-count');
 require('loadenv')('charon:env');
 var os = require('os');
 var monitor = require('monitor-dog');
-var pubsub = require('../../lib/pubsub');
 var cache = require('../../lib/cache');
 var apiClient = require('../../lib/api-client');
 var monitorStub = require('../fixtures/monitor');
+var redisPubSub = require('redis-pubsub-emitter');
+var noop = require('101/noop');
 
 describe('cache', function() {
   var clock;
@@ -41,13 +42,47 @@ describe('cache', function() {
     done();
   });
 
-  describe('options', function() {
+  describe('caching options', function() {
     it('should pass correct options', function(done) {
       expect(cache.cache._max).to.equal(process.env.CACHE_MAX_ENTRIES);
       expect(cache.cache._maxAge).to.equal(process.env.CACHE_MAX_AGE);
       done();
     });
-  });
+  }); // end 'caching options'
+
+  describe('initialize', function () {
+    var channel = 'some:redis:channel';
+
+    beforeEach(function (done) {
+      sinon.stub(cache, 'getRedisInvalidationChannel').returns(channel);
+      sinon.stub(cache.pubsub, 'on');
+      sinon.stub(cache, 'setReportItemCountInterval');
+      done();
+    });
+
+    afterEach(function (done) {
+      cache.getRedisInvalidationChannel.restore();
+      cache.pubsub.on.restore();
+      cache.setReportItemCountInterval.restore();
+      done();
+    });
+
+    it('should set the invalidation listener', function (done) {
+      cache.initialize();
+      expect(cache.pubsub.on.calledOnce).to.be.true();
+      expect(cache.pubsub.on.calledWith(
+        channel,
+        cache.invalidate
+      )).to.be.true();
+      done();
+    });
+
+    it('should set the item count reporting interval', function (done) {
+      cache.initialize();
+      expect(cache.setReportItemCountInterval.calledOnce).to.be.true();
+      done();
+    });
+  }); // end 'initialize'
 
   describe('setReportItemCountInterval', function() {
     var itemCount = 1337;
