@@ -27,6 +27,7 @@
     "curly": true
   },
   "dependencies": {
+    "101": "^1.2.0",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
     "callback-count": "^0.1.0",
@@ -43,7 +44,6 @@
     "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v4.8.2"
   },
   "devDependencies": {
-    "101": "^1.2.0",
     "code": "^1.4.0",
     "jsdoc": "^3.3.0-beta3",
     "jshint": "^2.6.3",
