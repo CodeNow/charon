@@ -130,11 +130,17 @@ describe('api-client', function() {
     });
 
     it('should reject if the API returns an invalid host IP', function (done) {
-      client.user.fetchInternalIpForHostname.yieldsAsync(null, 'not-good.2@@@');
-      client.resolveName('name', 'address').asCallback(function (err) {
+      var name = 'some-domain.com';
+      var hostIP = 'not-good.2@@@';
+
+      client.user.fetchInternalIpForHostname.yieldsAsync(null, hostIP);
+      client.resolveName(name, 'address').asCallback(function (err) {
         expect(err).to.exist();
         expect(err.message).to.equal('Invalid Ip Return by API');
         expect(err.rcode).to.equal(rcodes.Refused);
+        expect(err.data).to.exist();
+        expect(err.data.name).to.equal(name);
+        expect(err.data.hostIP).to.equal(hostIP);
         done();
       });
     });
