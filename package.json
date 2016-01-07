@@ -30,6 +30,8 @@
     "101": "^1.2.0",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
+    "bunyan-loggly": "0.0.5",
+    "bunyan-syslog": "^0.3.1",
     "callback-count": "^0.1.0",
     "debug": "^2.1.3",
     "dns-rcodes": "^1.0.0",
