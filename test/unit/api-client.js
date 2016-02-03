@@ -129,19 +129,105 @@ describe('api-client', function() {
       });
     });
 
-    it('should reject if the API returns an invalid host IP', function (done) {
+    describe('on empty host IP', function () {
+      var name = 'some-domain.com';
+
+      beforeEach(function (done) {
+        client.user.fetchInternalIpForHostname.yieldsAsync(null, '');
+        done();
+      });
+
+      it('should reject', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.message).to.match(/IP returned by API is empty./);
+          done();
+        })
+      });
+
+      it('should not report', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.report).to.be.false();
+          done();
+        });
+      });
+
+      it('should set RCODE to "Refused"', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.rcode).to.equal(rcodes.Refused);
+          done();
+        });
+      });
+    });
+
+    describe('on null/undefined host IP', function () {
+      var name = 'some-domain.com';
+
+      beforeEach(function (done) {
+        client.user.fetchInternalIpForHostname.yieldsAsync(null, null);
+        done();
+      });
+
+      it('should reject', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.message).to.match(/IP returned by API is empty./);
+          done();
+        })
+      });
+
+      it('should not report', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.report).to.be.false();
+          done();
+        });
+      });
+
+      it('should set RCODE to "Refused"', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.rcode).to.equal(rcodes.Refused);
+          done();
+        });
+      });
+    });
+
+    describe('on invalid host IP', function () {
       var name = 'some-domain.com';
       var hostIP = 'not-good.2@@@';
 
-      client.user.fetchInternalIpForHostname.yieldsAsync(null, hostIP);
-      client.resolveName(name, 'address').asCallback(function (err) {
-        expect(err).to.exist();
-        expect(err.message).to.equal('Invalid Ip Return by API');
-        expect(err.rcode).to.equal(rcodes.Refused);
-        expect(err.data).to.exist();
-        expect(err.data.name).to.equal(name);
-        expect(err.data.hostIP).to.equal(hostIP);
+      beforeEach(function (done) {
+        client.user.fetchInternalIpForHostname.yieldsAsync(null, hostIP);
         done();
+      });
+
+      it('should reject', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.message).to.match(/Invalid Ip Return by API/);
+          done();
+        });
+      });
+
+      it('should set RCODE to "Refused"', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.rcode).to.equal(rcodes.Refused);
+          done();
+        });
+      });
+
+      it('should set the correct error data', function (done) {
+        client.resolveName(name, 'address').asCallback(function (err) {
+          expect(err).to.exist();
+          expect(err.data).to.exist();
+          expect(err.data.name).to.equal(name);
+          expect(err.data.hostIP).to.equal(hostIP);
+          done()
+        });
       });
     });
 
