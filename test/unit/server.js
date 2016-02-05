@@ -402,5 +402,34 @@ describe('server', function() {
       expect(ErrorCat.report.calledWith(error)).to.be.true();
       done();
     });
+
+    describe('on empty error message', function () {
+      it('should set a default message', function (done) {
+        var error = new Error();
+        error.message = undefined;
+        server.errorHandler(error);
+        expect(error.message)
+          .to.equal('Unknown: error did not provide a message')
+        done();
+      });
+
+      it('should report even if overriden', function (done) {
+        var error = new Error();
+        error.message = undefined;
+        error.report = false;
+        server.errorHandler(error);
+        expect(error.report).to.equal(true);
+        done();
+      });
+    });
+
+    describe('on socket error', function () {
+      it('should not report', function (done) {
+        var error = new Error('socket hang up');
+        server.errorHandler(error);
+        expect(error.report).to.equal(false);
+        done();
+      });
+    });
   }); // end 'errorHandler'
 }); // end 'server'

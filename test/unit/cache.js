@@ -51,26 +51,41 @@ describe('cache', function() {
   }); // end 'caching options'
 
   describe('initialize', function () {
+    var pubsubMock = { on: noop };
     var channel = 'some:redis:channel';
 
     beforeEach(function (done) {
+      sinon.spy(pubsubMock, 'on');
+      sinon.stub(redisPubSub, 'createClient').returns(pubsubMock)
       sinon.stub(cache, 'getRedisInvalidationChannel').returns(channel);
-      sinon.stub(cache.pubsub, 'on');
       sinon.stub(cache, 'setReportItemCountInterval');
       done();
     });
 
     afterEach(function (done) {
+      pubsubMock.on.restore();
+      redisPubSub.createClient.restore();
       cache.getRedisInvalidationChannel.restore();
-      cache.pubsub.on.restore();
       cache.setReportItemCountInterval.restore();
+      cache.pubsub = undefined;
+      done();
+    });
+
+    it('should create the pubsub client', function (done) {
+      cache.initialize();
+      expect(redisPubSub.createClient.calledOnce).to.be.true();
+      expect(redisPubSub.createClient.calledWith(
+        process.env.REDIS_PORT,
+        process.env.REDIS_HOST
+      )).to.be.true();
+      expect(cache.pubsub).to.equal(pubsubMock);
       done();
     });
 
     it('should set the invalidation listener', function (done) {
       cache.initialize();
-      expect(cache.pubsub.on.calledOnce).to.be.true();
-      expect(cache.pubsub.on.calledWith(
+      expect(pubsubMock.on.calledOnce).to.be.true();
+      expect(pubsubMock.on.calledWith(
         channel,
         cache.invalidate
       )).to.be.true();
