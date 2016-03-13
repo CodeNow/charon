@@ -15,6 +15,7 @@ var sinon = require('sinon');
 var createCount = require('callback-count');
 
 require('loadenv')('charon:env');
+var fs = require('fs');
 var os = require('os');
 var monitor = require('monitor-dog');
 var cache = require('../../lib/cache');
@@ -74,12 +75,57 @@ describe('cache', function() {
     it('should create the pubsub client', function (done) {
       cache.initialize();
       expect(redisPubSub.createClient.calledOnce).to.be.true();
-      expect(redisPubSub.createClient.calledWith(
-        process.env.REDIS_PORT,
-        process.env.REDIS_HOST
-      )).to.be.true();
+      sinon.assert.calledWithExactly(
+        redisPubSub.createClient,
+        {
+          host: process.env.REDIS_HOST,
+          port: process.env.REDIS_PORT,
+          connect_timeout: 5000
+        }
+      );
       expect(cache.pubsub).to.equal(pubsubMock);
       done();
+    });
+
+    describe('with tls options', function () {
+      var prevCACert = process.env.REDIS_CACERT;
+
+      beforeEach(function (done) {
+        sinon.stub(fs, 'readFileSync').returns('bar');
+        process.env.REDIS_CACERT = 'foo';
+        done();
+      });
+
+      afterEach(function (done) {
+        fs.readFileSync.restore();
+        process.env.REDIS_CACERT = prevCACert;
+        done();
+      });
+
+      it('should not crash on read error', function (done) {
+        fs.readFileSync.throws(new Error('robot'));
+        cache.initialize();
+        done();
+      });
+
+      it('should pass tls options', function (done) {
+        cache.initialize();
+        expect(redisPubSub.createClient.calledOnce).to.be.true();
+        sinon.assert.calledWith(
+          redisPubSub.createClient,
+          {
+            host: process.env.REDIS_HOST,
+            port: process.env.REDIS_PORT,
+            connect_timeout: 5000,
+            tls: {
+              rejectUnauthorized: true,
+              ca: [ 'bar' ]
+            }
+          }
+        );
+        expect(cache.pubsub).to.equal(pubsubMock);
+        done();
+      });
     });
 
     it('should set the invalidation listener', function (done) {
