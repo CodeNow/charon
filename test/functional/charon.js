@@ -139,17 +139,29 @@ describe('functional', function() {
       });
     });
 
-    it('should monitor queries that error', function (done) {
-      sinon.stub(apiClient, 'resolveName', function () {
-        return Promise.reject(new Error('Server error'));
+    describe('in production', function () {
+      beforeEach(function (done) {
+        process.env.NODE_ENV = 'production-delta'
+        done()
+      })
+
+      afterEach(function (done) {
+        process.env.NODE_ENV = 'test'
+        done()
+      })
+
+      it('should monitor queries that error', function (done) {
+        sinon.stub(apiClient, 'resolveName', function () {
+          return Promise.reject(new Error('Server error'));
+        });
+        dnsRequest('example.runnableapp.com', function (err, resp) {
+          if (err) { return done(err); }
+          expect(monitor.increment.calledWith('query.error')).to.be.true();
+          apiClient.resolveName.restore();
+          done();
+        });
       });
-      dnsRequest('example.runnableapp.com', function (err, resp) {
-        if (err) { return done(err); }
-        expect(monitor.increment.calledWith('query.error')).to.be.true();
-        apiClient.resolveName.restore();
-        done();
-      });
-    });
+    }); // end 'in production'
   }); // end 'monitoring'
 
   describe('cache', function() {

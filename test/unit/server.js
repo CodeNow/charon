@@ -353,16 +353,41 @@ describe('server', function() {
     });
 
     describe('on error', function () {
-      it('should report to rollbar', function (done) {
-        var error = new Error('This is Error, you are Sparta');
-        server._getInternalNames.throws(error);
-        server.requestHandler(req, res).asCallback(function (err) {
-          expect(err).to.not.exist();
-          expect(ErrorCat.report.calledOnce).to.be.true();
-          expect(ErrorCat.report.calledWith(error)).to.be.true();
-          done();
+      describe('in production', function () {
+        beforeEach(function (done) {
+          process.env.NODE_ENV = 'production-delta'
+          done()
         })
-      });
+
+        afterEach(function (done) {
+          process.env.NODE_ENV = 'test'
+          done()
+        })
+
+        it('should report to rollbar', function (done) {
+          var error = new Error('This is Error, you are Sparta');
+          server._getInternalNames.throws(error);
+          server.requestHandler(req, res).asCallback(function (err) {
+            expect(err).to.not.exist();
+            expect(ErrorCat.report.calledOnce).to.be.true();
+            expect(ErrorCat.report.calledWith(error)).to.be.true();
+            done();
+          })
+        });
+      }); // end 'in production'
+
+      describe('in other environments', function () {
+        it('should not report to rollbar', function (done) {
+          server._getInternalNames.throws(
+            new Error('This is Error, you are Athens')
+          );
+          server.requestHandler(req, res).asCallback(function (err) {
+            expect(err).to.not.exist();
+            expect(ErrorCat.report.callCount).to.equal(0);
+            done();
+          })
+        });
+      }); // end 'in other environments'
 
       it('should set the default server failure rcode', function (done) {
         var error = new Error('This is Error, you are Sparta');
@@ -395,13 +420,33 @@ describe('server', function() {
   }); // end 'requestHandler'
 
   describe('errorHandler', function () {
-    it('should report errors to rollbar', function (done) {
-      var error = new Error('Something borked hard');
-      server.errorHandler(error);
-      expect(ErrorCat.report.calledOnce).to.be.true();
-      expect(ErrorCat.report.calledWith(error)).to.be.true();
-      done();
-    });
+    describe('in production', function () {
+      beforeEach(function (done) {
+        process.env.NODE_ENV = 'production-delta'
+        done()
+      })
+
+      afterEach(function (done) {
+        process.env.NODE_ENV = 'test'
+        done()
+      })
+
+      it('should report errors to rollbar', function (done) {
+        var error = new Error('Something borked hard');
+        server.errorHandler(error);
+        expect(ErrorCat.report.calledOnce).to.be.true();
+        expect(ErrorCat.report.calledWith(error)).to.be.true();
+        done();
+      });
+    }); // end 'in production'
+
+    describe('in other environments', function () {
+      it('should not report to rollbar', function (done) {
+        server.errorHandler(new Error('Something borked hard'));
+        expect(ErrorCat.report.callCount).to.equal(0);
+        done();
+      });
+    }); // end 'in other environments'
 
     describe('on empty error message', function () {
       it('should set a default message', function (done) {

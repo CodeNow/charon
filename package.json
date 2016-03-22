@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "lint": "jshint index.js lib/",
-    "unit": "NODE_ENV=test LOG_LEVEL=none lab -l -v -c -a code ./test/unit/*",
-    "functional": "NODE_ENV=test LOG_LEVEL=none lab -l -v -a code -m 5000 ./test/functional/*",
+    "unit": "NODE_ENV=test LOG_LEVEL=80 lab -l -v -c -a code ./test/unit/*",
+    "functional": "NODE_ENV=test LOG_LEVEL=80 lab -l -v -a code -m 5000 ./test/functional/*",
     "test": "npm run lint && npm run unit && npm run functional"
   },
   "repository": {
