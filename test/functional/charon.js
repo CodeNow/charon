@@ -21,7 +21,6 @@ var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 var dnsRequest = require('../fixtures/dns-request');
 var cache = require('../../lib/cache');
-var apiClient = require('../../lib/api-client');
 var Promise = require('bluebird');
 
 describe('functional', function() {

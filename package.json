@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "101": "^1.2.0",
+    "@runnable/api-client": "git@github.com:Runnable/api-client.git#changes-for-charon",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
     "bunyan-loggly": "0.0.5",
@@ -43,7 +44,7 @@
     "native-dns": "^0.7.0",
     "node-dogstatsd": "0.0.6",
     "redis-pubsub-emitter": "^0.4.0",
-    "runnable": "git+ssh://git@github.com:CodeNow/runnable-api-client#v4.12.2"
+    "sinon-as-promised": "^4.0.0"
   },
   "devDependencies": {
     "code": "^1.4.0",

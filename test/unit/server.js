@@ -23,6 +23,8 @@ var noop = require('101/noop');
 var Promise = require('bluebird');
 var rcodes = require('dns-rcodes');
 var server = require('../../lib/server');
+require('sinon-as-promised')(require('bluebird'));
+var os = require('os');
 
 describe('server', function() {
   beforeEach(function (done) {
@@ -104,6 +106,118 @@ describe('server', function() {
       done();
     });
   }); // end '_removeEvents'
+
+  describe('_getSelfHostIp', function () {
+    beforeEach(function (done) {
+      server._clearIpCache();
+      done();
+    });
+    afterEach(function (done) {
+      server._clearIpCache();
+      done();
+    });
+    describe('success', function () {
+      var netInterfaceMock = {
+        'eth1': [
+          {
+            address: 'fe80::3636:3bff:fec9:69ac',
+            family: 'IPv6'
+          },
+          {
+            address: '10.1.1.10',
+            family: 'IPv4'
+          }
+        ]
+      };
+      afterEach(function (done) {
+        os.networkInterfaces.restore();
+        done();
+      });
+      it('should return the eth1 IP', function (done) {
+        sinon.stub(os, 'networkInterfaces').returns(netInterfaceMock);
+        server._getSelfHostIp()
+          .then(function (ipAddress) {
+            expect(ipAddress).to.be.string();
+            expect(ipAddress).to.equal('http://10.1.1.10:4242');
+          })
+          .asCallback(done)
+      });
+      it('should use eth0, since eth1 doesn\'t have an IPv4', function (done) {
+        netInterfaceMock['eth0'] = [
+          {
+            address: 'fe80::3636:3bff:fec9:69ac',
+            family: 'IPv6'
+          },
+          {
+            address: '10.1.1.11',
+            family: 'IPv4'
+          }
+        ];
+        netInterfaceMock['eth1'].splice(1, 1);
+        sinon.stub(os, 'networkInterfaces').returns(netInterfaceMock);
+        server._getSelfHostIp()
+          .then(function (ipAddress) {
+            expect(ipAddress).to.be.string();
+            expect(ipAddress).to.equal('http://10.1.1.11:4242');
+          })
+          .asCallback(done)
+      });
+    });
+    describe('failures', function () {
+      afterEach(function (done) {
+        os.networkInterfaces.restore();
+        done();
+      });
+      it('should error if the netInterface object is invalid', function (done) {
+        sinon.stub(os, 'networkInterfaces').returns({});
+        server._getSelfHostIp()
+          .catch(function (err) {
+            expect(err.message).to.equal('No external network interface found')
+          })
+          .asCallback(done)
+      });
+      it('should fail if the ipAddress picked is invalid', function (done) {
+        var networkInterfacesMock = {
+          'eth0': [
+            {
+              address: 'fe80::3636:3bff:fec9:69ac',
+              family: 'IPv6'
+            },
+            {
+              address: '',
+              family: 'IPv4'
+            }
+          ]
+        };
+        sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
+        server._getSelfHostIp()
+          .catch(function (err) {
+            expect(err.message).to.equal('IP returned by Self is empty')
+          })
+          .asCallback(done)
+      });
+      it('should fail if the ipAddress picked isn\'t IPv4', function (done) {
+        var networkInterfacesMock = {
+          'eth0': [
+            {
+              address: 'fe80::3636:3bff:fec9:69ac',
+              family: 'IPv6'
+            },
+            {
+              address: 'fe80::3636:3bff:fec9:69ac',
+              family: 'IPv4'
+            }
+          ]
+        };
+        sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
+        server._getSelfHostIp()
+          .catch(function (err) {
+            expect(err.message).to.equal('IP returned by Self is invalid: fe80::3636:3bff:fec9:69ac')
+          })
+          .asCallback(done)
+      });
+    })
+  });
 
   describe('_getInternalNames', function () {
     var oldDomainFilter;
@@ -210,6 +324,7 @@ describe('server', function() {
     });
 
     beforeEach(function (done) {
+      sinon.stub(server, '_getSelfHostIp').resolves('http://10.10.10.10:4141');
       sinon.stub(server.instance, 'serve', function() {
         server.instance.emit('listening');
       });
@@ -220,6 +335,7 @@ describe('server', function() {
     });
 
     afterEach(function (done) {
+      server._getSelfHostIp.restore();
       server.instance.serve.restore();
       cache.initialize.restore();
       monitor.histogram.restore();
@@ -309,10 +425,12 @@ describe('server', function() {
       sinon.stub(server, '_getInternalNames');
       sinon.stub(apiClient, 'resolveName');
       sinon.stub(dns, 'A');
+      sinon.stub(server, '_getSelfHostIp').resolves('http://10.10.10.10:4141');
       done();
     });
 
     afterEach(function (done) {
+      server._getSelfHostIp.restore();
       server._getInternalNames.restore();
       apiClient.resolveName.restore();
       dns.A.restore();
