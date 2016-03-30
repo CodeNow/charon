@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "101": "^1.2.0",
-    "@runnable/api-client": "git+ssh://git@github.com:Runnable/api-client.git#changes-for-charon",
+    "@runnable/api-client": "git://github.com/Runnable/api-client.git#changes-for-charon",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
     "bunyan-loggly": "0.0.5",
