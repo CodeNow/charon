@@ -107,7 +107,7 @@ describe('server', function() {
     });
   }); // end '_removeEvents'
 
-  describe('_getSelfHostIp', function () {
+  describe('_getHostIp', function () {
     beforeEach(function (done) {
       server._clearIpCache();
       done();
@@ -118,7 +118,7 @@ describe('server', function() {
     });
     describe('success', function () {
       var netInterfaceMock = {
-        'eth1': [
+        'eth0': [
           {
             address: 'fe80::3636:3bff:fec9:69ac',
             family: 'IPv6'
@@ -133,32 +133,14 @@ describe('server', function() {
         os.networkInterfaces.restore();
         done();
       });
-      it('should return the eth1 IP', function (done) {
+      it('should return the eth0 IP', function (done) {
         sinon.stub(os, 'networkInterfaces').returns(netInterfaceMock);
-        server._getSelfHostIp()
+        Promise.try(function () {
+            return server._getHostIp();
+          })
           .then(function (ipAddress) {
             expect(ipAddress).to.be.string();
             expect(ipAddress).to.equal('http://10.1.1.10:4242');
-          })
-          .asCallback(done)
-      });
-      it('should use eth0, since eth1 doesn\'t have an IPv4', function (done) {
-        netInterfaceMock['eth0'] = [
-          {
-            address: 'fe80::3636:3bff:fec9:69ac',
-            family: 'IPv6'
-          },
-          {
-            address: '10.1.1.11',
-            family: 'IPv4'
-          }
-        ];
-        netInterfaceMock['eth1'].splice(1, 1);
-        sinon.stub(os, 'networkInterfaces').returns(netInterfaceMock);
-        server._getSelfHostIp()
-          .then(function (ipAddress) {
-            expect(ipAddress).to.be.string();
-            expect(ipAddress).to.equal('http://10.1.1.11:4242');
           })
           .asCallback(done)
       });
@@ -170,7 +152,9 @@ describe('server', function() {
       });
       it('should error if the netInterface object is invalid', function (done) {
         sinon.stub(os, 'networkInterfaces').returns({});
-        server._getSelfHostIp()
+        Promise.try(function () {
+            return server._getHostIp();
+          })
           .catch(function (err) {
             expect(err.message).to.equal('No external network interface found')
           })
@@ -190,7 +174,9 @@ describe('server', function() {
           ]
         };
         sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
-        server._getSelfHostIp()
+        Promise.try(function () {
+          return server._getHostIp();
+        })
           .catch(function (err) {
             expect(err.message).to.equal('IP returned by Self is empty')
           })
@@ -210,7 +196,9 @@ describe('server', function() {
           ]
         };
         sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
-        server._getSelfHostIp()
+        Promise.try(function () {
+            return server._getHostIp();
+          })
           .catch(function (err) {
             expect(err.message).to.equal('IP returned by Self is invalid: fe80::3636:3bff:fec9:69ac')
           })
@@ -222,15 +210,28 @@ describe('server', function() {
   describe('_getInternalNames', function () {
     var oldDomainFilter;
     var domainFilter = 'wowza.com';
-
+    var netInterfaceMock = {
+      'eth0': [
+        {
+          address: 'fe80::3636:3bff:fec9:69ac',
+          family: 'IPv6'
+        },
+        {
+          address: '10.1.1.10',
+          family: 'IPv4'
+        }
+      ]
+    };
     before(function (done) {
       oldDomainFilter = process.env.DOMAIN_FILTER;
+      sinon.stub(os, 'networkInterfaces').returns(netInterfaceMock);
       process.env.DOMAIN_FILTER = domainFilter;
       done();
     });
 
     after(function (done) {
       process.env.DOMAIN_FILTER = oldDomainFilter;
+      os.networkInterfaces.restore();
       done();
     });
 
@@ -318,13 +319,26 @@ describe('server', function() {
   }); // end 'on event'
 
   describe('start', function () {
+    var networkInterfacesMock = {
+      'eth0': [
+        {
+          address: 'fe80::3636:3bff:fec9:69ac',
+          family: 'IPv6'
+        },
+        {
+          address: '10.20.128.45',
+          family: 'IPv4'
+        }
+      ]
+    };
+
     afterEach(function (done) {
       server._removeEvents();
       done();
     });
 
     beforeEach(function (done) {
-      sinon.stub(server, '_getSelfHostIp').resolves('http://10.10.10.10:4141');
+      sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
       sinon.stub(server.instance, 'serve', function() {
         server.instance.emit('listening');
       });
@@ -335,7 +349,7 @@ describe('server', function() {
     });
 
     afterEach(function (done) {
-      server._getSelfHostIp.restore();
+      os.networkInterfaces.restore();
       server.instance.serve.restore();
       cache.initialize.restore();
       monitor.histogram.restore();
@@ -425,12 +439,12 @@ describe('server', function() {
       sinon.stub(server, '_getInternalNames');
       sinon.stub(apiClient, 'resolveName');
       sinon.stub(dns, 'A');
-      sinon.stub(server, '_getSelfHostIp').resolves('http://10.10.10.10:4141');
+      sinon.stub(server, '_getHostIp').returns('http://10.10.10.10:4141');
       done();
     });
 
     afterEach(function (done) {
-      server._getSelfHostIp.restore();
+      server._getHostIp.restore();
       server._getInternalNames.restore();
       apiClient.resolveName.restore();
       dns.A.restore();

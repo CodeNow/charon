@@ -28,8 +28,7 @@
   },
   "dependencies": {
     "101": "^1.2.0",
-    "@runnable/api-client": "git://github.com/Runnable/api-client.git#1831ed7585744675fff95070e5f3913386d87042",
-    "@runnable/hostname": "git://github.com/Runnable/hostname.git#v2.0.0",
+    "@runnable/api-client": "^6.0.1",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
     "bunyan-loggly": "0.0.5",
