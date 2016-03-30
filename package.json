@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "101": "^1.2.0",
-    "api-client": "git://github.com/Runnable/api-client.git#changes-for-charon",
+    "@runnable/api-client": "git://github.com/Runnable/api-client.git#1831ed7585744675fff95070e5f3913386d87042",
     "@runnable/hostname": "git://github.com/Runnable/hostname.git#v2.0.0",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
