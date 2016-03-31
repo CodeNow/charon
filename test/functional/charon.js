@@ -12,6 +12,7 @@ var Code = require('code');
 var expect = Code.expect;
 var sinon = require('sinon');
 var createCount = require('callback-count');
+var os = require('os');
 
 require('loadenv')('charon:env');
 var server = require('../../lib/server');
@@ -21,16 +22,29 @@ var monitor = require('monitor-dog');
 var monitorStub = require('../fixtures/monitor');
 var dnsRequest = require('../fixtures/dns-request');
 var cache = require('../../lib/cache');
-var apiClient = require('../../lib/api-client');
 var Promise = require('bluebird');
 
 describe('functional', function() {
+  var networkInterfacesMock = {
+    'eth0': [
+      {
+        address: 'fe80::3636:3bff:fec9:69ac',
+        family: 'IPv6'
+      },
+      {
+        address: '10.20.128.45',
+        family: 'IPv4'
+      }
+    ]
+  };
   before(function (done) {
+    sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
     sinon.stub(apiClient, 'login').returns(Promise.resolve());
     server.start().then(done);
   });
 
   after(function (done) {
+    os.networkInterfaces.restore();
     apiClient.login.restore();
     done();
   });

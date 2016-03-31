@@ -62,6 +62,7 @@ describe('api-client', function() {
 
   describe('resolveName', function () {
     var hostIP = '10.0.0.1';
+    var localDockHost = '10.12.0.1';
 
     beforeEach(function (done) {
       sinon.stub(client.user, 'fetchInternalIpForHostname')
@@ -87,7 +88,7 @@ describe('api-client', function() {
       var cachedRecord = { cached: true };
       cache.has.returns(true);
       cache.get.returns(cachedRecord);
-      client.resolveName(name, address).asCallback(function (err, record) {
+      client.resolveName(name, address, localDockHost).asCallback(function (err, record) {
         expect(err).to.not.exist();
         expect(cache.has.calledOnce).to.be.true();
         expect(cache.has.firstCall.args[0]).to.deep.equal(key);
@@ -101,7 +102,7 @@ describe('api-client', function() {
     it('should reject if an error occurs before the lookup', function (done) {
       var unexpectedError = new Error('This is error sparta, sucka');
       cache.has.throws(unexpectedError);
-      client.resolveName('name', 'address').asCallback(function (err) {
+      client.resolveName('name', 'address', localDockHost).asCallback(function (err) {
         expect(err).to.equal(unexpectedError);
         done();
       });
@@ -110,7 +111,7 @@ describe('api-client', function() {
     it('should lookup records via the API', function (done) {
       var name = 'name.com';
       var address = '172.0.0.0';
-      client.resolveName(name, address).asCallback(function (err, record) {
+      client.resolveName(name, address, localDockHost).asCallback(function (err, record) {
         expect(err).to.not.exist();
         expect(client.user.fetchInternalIpForHostname.calledOnce).to.be.true();
         expect(client.user.fetchInternalIpForHostname.calledWith(
@@ -123,7 +124,7 @@ describe('api-client', function() {
     it('should reject on API errors', function (done) {
       var apiError = new Error('go figure');
       client.user.fetchInternalIpForHostname.yields(apiError);
-      client.resolveName('name', 'address').asCallback(function (err) {
+      client.resolveName('name', 'address', localDockHost).asCallback(function (err) {
         expect(err.cause).to.equal(apiError);
         done();
       });
@@ -138,7 +139,7 @@ describe('api-client', function() {
       });
 
       it('should reject', function (done) {
-        client.resolveName(name, 'address').asCallback(function (err) {
+        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.message).to.match(/IP returned by API is empty./);
           done();
@@ -146,7 +147,7 @@ describe('api-client', function() {
       });
 
       it('should not report', function (done) {
-        client.resolveName(name, 'address').asCallback(function (err) {
+        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.report).to.be.false();
           done();
@@ -154,7 +155,7 @@ describe('api-client', function() {
       });
 
       it('should set RCODE to "Refused"', function (done) {
-        client.resolveName(name, 'address').asCallback(function (err) {
+        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.rcode).to.equal(rcodes.Refused);
           done();
@@ -171,7 +172,7 @@ describe('api-client', function() {
       });
 
       it('should reject', function (done) {
-        client.resolveName(name, 'address').asCallback(function (err) {
+        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.message).to.match(/IP returned by API is empty./);
           done();
@@ -179,7 +180,7 @@ describe('api-client', function() {
       });
 
       it('should not report', function (done) {
-        client.resolveName(name, 'address').asCallback(function (err) {
+        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.report).to.be.false();
           done();
@@ -187,7 +188,7 @@ describe('api-client', function() {
       });
 
       it('should set RCODE to "Refused"', function (done) {
-        client.resolveName(name, 'address').asCallback(function (err) {
+        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.rcode).to.equal(rcodes.Refused);
           done();
