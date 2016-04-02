@@ -462,6 +462,23 @@ describe('server', function() {
       });
     });
 
+    it('should ignore IPv6 request', function (done) {
+      var testReq = {
+        address: { address: '172.0.0.1' },
+        question: [{
+          type: 28
+        }]
+      }
+      server._getInternalNames.returns([]);
+      server.requestHandler(testReq, res).asCallback(function (err) {
+        expect(err).to.not.exist();
+        expect(res.header.rcode).to.equal(rcodes.NoError);
+        expect(res.answer).to.deep.equal([]);
+        expect(res.send.calledOnce).to.be.true();
+        done();
+      });
+    });
+
     it('should resolve all internal domain names', function (done) {
       var aRecord = { a: 'totes' };
       server._getInternalNames.returns([
