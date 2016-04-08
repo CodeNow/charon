@@ -112,10 +112,12 @@ describe('server', function() {
       server._clearIpCache();
       done();
     });
+
     afterEach(function (done) {
       server._clearIpCache();
       done();
     });
+
     describe('success', function () {
       var netInterfaceMock = {
         'eth0': [
@@ -145,6 +147,7 @@ describe('server', function() {
           .asCallback(done)
       });
     });
+
     describe('failures', function () {
       afterEach(function (done) {
         os.networkInterfaces.restore();
@@ -469,7 +472,7 @@ describe('server', function() {
           type: 28
         }]
       }
-      server._getInternalNames.returns([]);
+      server._getInternalNames.returns(['woot.com']);
       server.requestHandler(testReq, res).asCallback(function (err) {
         expect(err).to.not.exist();
         expect(res.header.rcode).to.equal(rcodes.NoError);
