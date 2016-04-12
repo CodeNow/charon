@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "101": "^1.2.0",
-    "@runnable/api-client": "git://github.com/Runnable/api-client.git#dynamic-isolation-urls",
+    "@runnable/api-client": "git://github.com/Runnable/api-client.git#v7.0.0",
     "@runnable/hostname": "git://github.com/Runnable/hostname.git#v3.0.0",
     "bluebird": "^3.1.1",
     "bunyan": "^1.4.0",
