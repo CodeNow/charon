@@ -168,31 +168,32 @@ describe('functional', function() {
 
   describe('cache', function() {
     it('should invalidate correct cache entries on pubsub event', function(done) {
-      var address = '127.0.0.3';
       var hostIps = ['10.0.0.1', '10.0.0.2', '10.0.0.3'];
       var names = ['cache-inv1.com', 'cache-inv2.com', 'cache-inv3.com'];
 
       // Set fake entries directly into the cache
       names.forEach(function (name, index) {
-        var cacheKey = { name: name, address: address };
-        var cacheValue = { name: name, address: hostIps[index] };
+        var cacheKey = { address: hostIps[index], name: name };
+        var cacheValue = { address: hostIps[index], name: name };
         cache.set(cacheKey, cacheValue);
       });
 
       // Ensure cache values are set before the invalidate
-      names.forEach(function (name) {
-        var cacheKey = { name: name, address: address };
+      names.forEach(function (name, index) {
+        var cacheKey = { address: hostIps[index], name: name };
         expect(cache.get(cacheKey), "name=" + name)
-          .to.not.be.undefined();
+          .to.deep.equal({ address: hostIps[index], name: name });
       });
 
-      cache.pubsub.emit(cache.getRedisInvalidationChannel(), '127.0.0.3');
+      cache.pubsub.emit(process.env.REDIS_INVALIDATION_KEY, names[1]);
 
       // Check if they are gone after the invalidate
-      names.forEach(function (name) {
-        expect(cache.get({ address: address, name: name }), "name=" + name)
-          .to.be.undefined();
-      });
+      expect(cache.get({ address: hostIps[0], name: names[0] }), "name=" + names[0])
+        .to.deep.equal({ address: hostIps[0], name: names[0] });
+      expect(cache.get({ address: hostIps[1], name: names[1] }), "name=" + names[1])
+        .to.be.undefined();
+      expect(cache.get({ address: hostIps[2], name: names[2] }), "name=" + names[2])
+        .to.deep.equal({ address: hostIps[2], name: names[2] });
 
       done();
     });

@@ -52,12 +52,10 @@ describe('cache', function() {
 
   describe('initialize', function () {
     var pubsubMock = { on: noop };
-    var channel = 'some:redis:channel';
 
     beforeEach(function (done) {
       sinon.spy(pubsubMock, 'on');
-      sinon.stub(redisPubSub, 'createClient').returns(pubsubMock)
-      sinon.stub(cache, 'getRedisInvalidationChannel').returns(channel);
+      sinon.stub(redisPubSub, 'createClient').returns(pubsubMock);
       sinon.stub(cache, 'setReportItemCountInterval');
       done();
     });
@@ -65,7 +63,6 @@ describe('cache', function() {
     afterEach(function (done) {
       pubsubMock.on.restore();
       redisPubSub.createClient.restore();
-      cache.getRedisInvalidationChannel.restore();
       cache.setReportItemCountInterval.restore();
       cache.pubsub = undefined;
       done();
@@ -86,7 +83,7 @@ describe('cache', function() {
       cache.initialize();
       expect(pubsubMock.on.calledOnce).to.be.true();
       expect(pubsubMock.on.calledWith(
-        channel,
+        process.env.REDIS_INVALIDATION_KEY,
         cache.invalidate
       )).to.be.true();
       done();
@@ -143,50 +140,9 @@ describe('cache', function() {
     });
   }); // end 'clearReportItemCountInterval'
 
-  describe('getRedisInvalidationChannel', function() {
-    var networkInterfacesMock = {
-      'eth0': [
-        {
-          address: 'fe80::3636:3bff:fec9:69ac',
-          family: 'IPv6'
-        },
-        {
-          address: '10.20.128.45',
-          family: 'IPv4'
-        }
-      ]
-    };
-
-    beforeEach(function (done) {
-      sinon.stub(os, 'networkInterfaces').returns(networkInterfacesMock);
-      done();
-    });
-
-    afterEach(function (done) {
-      os.networkInterfaces.restore();
-      done();
-    });
-
-    it('should correctly determine the channel', function(done) {
-      var expectedChannel = [
-        process.env.REDIS_INVALIDATION_KEY,
-        networkInterfacesMock['eth0'][1].address
-      ].join(':');
-      expect(cache.getRedisInvalidationChannel()).to.equal(expectedChannel);
-      done();
-    });
-
-    it('should use the global channel without `eth0`', function(done) {
-      os.networkInterfaces.returns({});
-      expect(cache.getRedisInvalidationChannel())
-        .to.equal(process.env.REDIS_INVALIDATION_KEY);
-      done();
-    });
-  }); // end 'getRedisInvalidationChannel'
-
   describe('invalidate', function() {
     beforeEach(function (done) {
-      sinon.spy(cache, 'purge');
+      sinon.stub(cache, 'purge').returns();
       done();
     });
 
@@ -196,11 +152,12 @@ describe('cache', function() {
     });
 
     it('should purge cache entries with the given local ip', function(done) {
-      var localIp = '172.0.0.0';
-      cache.invalidate(localIp);
-      expect(cache.purge.calledOnce).to.be.true();
-      expect(cache.purge.firstCall.args[0]).to.deep.equal({
-        address: localIp
+      var name = 'mavis-staging-runnable.io';
+      var address = '10.0.0.2';
+      cache.invalidate(name);
+      sinon.assert.calledOnce(cache.purge);
+      sinon.assert.calledWith(cache.purge, {
+        name: name
       });
       done();
     });
