@@ -182,10 +182,10 @@ describe('functional', function() {
       names.forEach(function (name, index) {
         var cacheKey = { address: hostIps[index], name: name };
         expect(cache.get(cacheKey), "name=" + name)
-        .to.deep.equal({ address: hostIps[index], name: name });
+          .to.deep.equal({ address: hostIps[index], name: name });
       });
 
-      cache.pubsub.emit(process.env.REDIS_INVALIDATION_KEY, names[1] + ':' + hostIps[1]);
+      cache.pubsub.emit(process.env.REDIS_INVALIDATION_KEY, names[1]);
 
       // Check if they are gone after the invalidate
       expect(cache.get({ address: hostIps[0], name: names[0] }), "name=" + names[0])

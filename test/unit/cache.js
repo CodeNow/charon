@@ -154,20 +154,11 @@ describe('cache', function() {
     it('should purge cache entries with the given local ip', function(done) {
       var name = 'mavis-staging-runnable.io';
       var address = '10.0.0.2';
-      cache.invalidate(name + ':' + address);
+      cache.invalidate(name);
       sinon.assert.calledOnce(cache.purge);
       sinon.assert.calledWith(cache.purge, {
-        name: name,
-        address: address
+        name: name
       });
-      done();
-    });
-
-    it('should not throw if invalid string', function(done) {
-      expect(function () {
-        cache.invalidate();
-      }).to.not.throw();
-      sinon.assert.notCalled(cache.purge);
       done();
     });
   }); // end 'invalidate'
