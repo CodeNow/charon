@@ -86,7 +86,7 @@ describe('functional', function() {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
-        expect(resp.header.rcode).to.equal(rcodes.ServerFailure);
+        expect(resp.header.rcode).to.equal(rcodes.NameError);
         apiClient.resolveName.restore();
         done();
       });
@@ -161,6 +161,16 @@ describe('functional', function() {
         if (err) { return done(err); }
         expect(monitor.increment.calledWith('query.error')).to.be.true();
         apiClient.resolveName.restore();
+        done();
+      });
+    });
+
+    it('should monitor queries that error', function (done) {
+      sinon.stub(server, '_getInternalNames').throws(new Error('Server error'));
+      dnsRequest('example.runnableapp.com', function (err, resp) {
+        if (err) { return done(err); }
+        expect(monitor.increment.calledWith('query.error')).to.be.true();
+        server._getInternalNames.restore();
         done();
       });
     });
