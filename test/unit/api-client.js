@@ -138,7 +138,7 @@ describe('api-client', function() {
         done();
       });
 
-      it('should reject', function (done) {
+      it('should reject with EmptyHost', function (done) {
         client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.message).to.match(/IP returned by API is empty./);
@@ -150,14 +150,6 @@ describe('api-client', function() {
         client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.report).to.be.false();
-          done();
-        });
-      });
-
-      it('should set RCODE to "Refused"', function (done) {
-        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
-          expect(err).to.exist();
-          expect(err.rcode).to.equal(rcodes.Refused);
           done();
         });
       });
@@ -171,7 +163,7 @@ describe('api-client', function() {
         done();
       });
 
-      it('should reject', function (done) {
+      it('should reject with EmptyHost', function (done) {
         client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.message).to.match(/IP returned by API is empty./);
@@ -183,14 +175,6 @@ describe('api-client', function() {
         client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
           expect(err).to.exist();
           expect(err.report).to.be.false();
-          done();
-        });
-      });
-
-      it('should set RCODE to "Refused"', function (done) {
-        client.resolveName(name, 'address', localDockHost).asCallback(function (err) {
-          expect(err).to.exist();
-          expect(err.rcode).to.equal(rcodes.Refused);
           done();
         });
       });

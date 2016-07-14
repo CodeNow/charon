@@ -25,6 +25,7 @@ var rcodes = require('dns-rcodes');
 var server = require('../../lib/server');
 require('sinon-as-promised')(require('bluebird'));
 var os = require('os');
+var EmptyHost = require('../../lib/errors/empty-hosts');
 
 describe('server', function() {
   beforeEach(function (done) {
@@ -500,6 +501,22 @@ describe('server', function() {
         expect(dns.A.calledTwice).to.be.true();
         expect(dns.A.calledWith('first')).to.be.true();
         expect(dns.A.calledWith('second')).to.be.true();
+        done();
+      });
+    });
+
+    it('should return NameError when nothing returned', function (done) {
+      var aRecord = { a: 'totes' };
+      server._getInternalNames.returns([
+        'example.com',
+      ]);
+      apiClient.resolveName.throws(new EmptyHost());
+
+      server.requestHandler(req, res).asCallback(function (err) {
+        expect(err).to.not.exist();
+        expect(res.header.rcode).to.equal(rcodes.NameError);
+        expect(res.answer).to.deep.equal([]);
+        sinon.assert.notCalled(dns.A);
         done();
       });
     });
