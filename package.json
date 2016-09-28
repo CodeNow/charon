@@ -4,7 +4,7 @@
   "description": "Internal container-to-container DNS.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "LOG_LEVEL=10 node index.js",
     "lint": "jshint index.js lib/",
     "unit": "NODE_ENV=test LOG_LEVEL=80 lab -l -v -c -a code ./test/unit/*",
     "functional": "NODE_ENV=test LOG_LEVEL=80 lab -l -v -a code -m 5000 ./test/functional/*",
