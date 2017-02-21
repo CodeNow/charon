@@ -257,22 +257,22 @@ describe('server', function() {
       done();
     });
 
-    it('should filter non-internal domain names', function (done) {
-      var req = {
-        question: [
-          { name: domainFilter },
-          { name: 'cool.com' },
-          { name: 'beta.' + domainFilter }
-        ]
-      };
-      var expected = [
-        domainFilter,
-        'beta.' + domainFilter
-      ]
-      var result = server._getInternalNames(req);
-      expect(result).to.deep.equal(expected);
-      done();
-    });
+    //it('should filter non-internal domain names', function (done) {
+    //  var req = {
+    //    question: [
+    //      { name: domainFilter },
+    //      { name: 'cool.com' },
+    //      { name: 'beta.' + domainFilter }
+    //    ]
+    //  };
+    //  var expected = [
+    //    domainFilter,
+    //    'beta.' + domainFilter
+    //  ]
+    //  var result = server._getInternalNames(req);
+    //  expect(result).to.deep.equal(expected);
+    //  done();
+    //});
   }); // end '_getInternalNames'
 
   describe('on event', function () {
