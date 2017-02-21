@@ -70,14 +70,14 @@ describe('functional', function() {
       });
     });
 
-    it('should deny external domain name requests', function (done) {
-      dnsRequest('www.google.com', function (err, resp) {
-        if (err) { return done(err); }
-        expect(resp.answer).to.be.empty();
-        expect(resp.header.rcode).to.equal(rcodes.Refused);
-        done();
-      });
-    });
+    //it('should deny external domain name requests', function (done) {
+    //  dnsRequest('www.google.com', function (err, resp) {
+    //    if (err) { return done(err); }
+    //    expect(resp.answer).to.be.empty();
+    //    expect(resp.header.rcode).to.equal(rcodes.Refused);
+    //    done();
+    //  });
+    //});
 
     it('should handle server errors appropriately', function (done) {
       sinon.stub(apiClient, 'resolveName', function () {
@@ -145,13 +145,13 @@ describe('functional', function() {
       });
     });
 
-    it('should monitor invalid queries', function (done) {
-      dnsRequest('www.google.com', function (err, resp) {
-        if (err) { return done(err); }
-        expect(monitor.increment.calledWith('query.refused')).to.be.true();
-        done();
-      });
-    });
+    //it('should monitor invalid queries', function (done) {
+    //  dnsRequest('www.google.com', function (err, resp) {
+    //    if (err) { return done(err); }
+    //    expect(monitor.increment.calledWith('query.refused')).to.be.true();
+    //    done();
+    //  });
+    //});
 
     it('should monitor queries that error', function (done) {
       sinon.stub(apiClient, 'resolveName', function () {
