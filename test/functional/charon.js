@@ -70,14 +70,18 @@ describe('functional', function() {
       });
     });
 
-    //it('should deny external domain name requests', function (done) {
-    //  dnsRequest('www.google.com', function (err, resp) {
-    //    if (err) { return done(err); }
-    //    expect(resp.answer).to.be.empty();
-    //    expect(resp.header.rcode).to.equal(rcodes.Refused);
-    //    done();
-    //  });
-    //});
+    it('should deny domain name requests that are empty?', function (done) {
+      sinon.stub(server, '_getInternalNames', function () {
+        return []
+      });
+      dnsRequest('www.google.com', function (err, resp) {
+        if (err) { return done(err); }
+        expect(resp.answer).to.be.empty();
+        expect(resp.header.rcode).to.equal(rcodes.Refused);
+        server._getInternalNames.restore();
+        done();
+      });
+    });
 
     it('should handle server errors appropriately', function (done) {
       sinon.stub(apiClient, 'resolveName', function () {
