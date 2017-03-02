@@ -145,6 +145,14 @@ describe('functional', function() {
       });
     });
 
+    it('should monitor invalid queries', function (done) {
+      dnsRequest('s3-us-west-2.amazonaws.com', function (err, resp) {
+        if (err) { return done(err); }
+        expect(monitor.increment.calledWith('query.refused')).to.be.true();
+        done();
+      });
+    });
+
     it('should monitor queries that error', function (done) {
       sinon.stub(apiClient, 'resolveName', function () {
         return Promise.reject(new Error('Server error'));
