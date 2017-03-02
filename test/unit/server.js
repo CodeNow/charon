@@ -257,22 +257,23 @@ describe('server', function() {
       done();
     });
 
-    //it('should filter non-internal domain names', function (done) {
-    //  var req = {
-    //    question: [
-    //      { name: domainFilter },
-    //      { name: 'cool.com' },
-    //      { name: 'beta.' + domainFilter }
-    //    ]
-    //  };
-    //  var expected = [
-    //    domainFilter,
-    //    'beta.' + domainFilter
-    //  ]
-    //  var result = server._getInternalNames(req);
-    //  expect(result).to.deep.equal(expected);
-    //  done();
-    //});
+    it('should filter amazon domain names', function (done) {
+      var req = {
+        question: [
+          { name: domainFilter },
+          { name: 's3-us-west-2.amazonaws.com' },
+          { name: 'registry.npmjs.org' },
+          { name: 'beta.' + domainFilter }
+        ]
+      };
+      var expected = [
+        domainFilter,
+        'beta.' + domainFilter
+      ]
+      var result = server._getInternalNames(req);
+      expect(result).to.deep.equal(expected);
+      done();
+    });
   }); // end '_getInternalNames'
 
   describe('on event', function () {
