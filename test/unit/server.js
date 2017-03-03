@@ -257,12 +257,11 @@ describe('server', function() {
       done();
     });
 
-    it('should filter amazon domain names', function (done) {
+    it('should filter non-internal domain names', function (done) {
       var req = {
         question: [
           { name: domainFilter },
-          { name: 's3-us-west-2.amazonaws.com' },
-          { name: 'registry.npmjs.org' },
+          { name: 'cool.com' },
           { name: 'beta.' + domainFilter }
         ]
       };
