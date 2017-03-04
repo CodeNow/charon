@@ -86,7 +86,7 @@ describe('functional', function() {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
-        expect(resp.header.rcode).to.equal(rcodes.NameError);
+        expect(resp.header.rcode).to.equal(rcodes.Refused);
         apiClient.resolveName.restore();
         done();
       });
