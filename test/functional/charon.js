@@ -70,8 +70,8 @@ describe('functional', function() {
       });
     });
 
-    it('should deny external domain name requests', function (done) {
-      dnsRequest('www.google.com', function (err, resp) {
+    it('should deny domain name requests that are not allowed', function (done) {
+      dnsRequest('s3-us-west-2.amazonaws.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
         expect(resp.header.rcode).to.equal(rcodes.Refused);
@@ -86,7 +86,7 @@ describe('functional', function() {
       dnsRequest('example.runnableapp.com', function (err, resp) {
         if (err) { return done(err); }
         expect(resp.answer).to.be.empty();
-        expect(resp.header.rcode).to.equal(rcodes.NameError);
+        expect(resp.header.rcode).to.equal(rcodes.Refused);
         apiClient.resolveName.restore();
         done();
       });
@@ -146,7 +146,7 @@ describe('functional', function() {
     });
 
     it('should monitor invalid queries', function (done) {
-      dnsRequest('www.google.com', function (err, resp) {
+      dnsRequest('s3-us-west-2.amazonaws.com', function (err, resp) {
         if (err) { return done(err); }
         expect(monitor.increment.calledWith('query.refused')).to.be.true();
         done();

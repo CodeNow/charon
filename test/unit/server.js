@@ -257,11 +257,12 @@ describe('server', function() {
       done();
     });
 
-    it('should filter non-internal domain names', function (done) {
+    it('should filter amazon domain names', function (done) {
       var req = {
         question: [
           { name: domainFilter },
-          { name: 'cool.com' },
+          { name: 's3-us-west-2.amazonaws.com' },
+          { name: 'registry.npmjs.org' },
           { name: 'beta.' + domainFilter }
         ]
       };
@@ -505,7 +506,7 @@ describe('server', function() {
       });
     });
 
-    it('should return NameError when nothing returned', function (done) {
+    it('should return Refused when nothing returned', function (done) {
       var aRecord = { a: 'totes' };
       server._getInternalNames.returns([
         'example.com',
@@ -514,7 +515,7 @@ describe('server', function() {
 
       server.requestHandler(req, res).asCallback(function (err) {
         expect(err).to.not.exist();
-        expect(res.header.rcode).to.equal(rcodes.NameError);
+        expect(res.header.rcode).to.equal(rcodes.Refused);
         expect(res.answer).to.deep.equal([]);
         sinon.assert.notCalled(dns.A);
         done();
